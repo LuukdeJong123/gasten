@@ -16,6 +16,7 @@ class LossSecondTerm(Metric):
         with torch.no_grad():
             c_output = self.C.get(images, start_idx, batch_size)
 
+        #confusion distance
         term_2 = (0.5 - c_output).abs().sum().item()
 
         self.acc += term_2
