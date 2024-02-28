@@ -116,20 +116,9 @@ def train(config, dataset, device, n_epochs, batch_size, G, g_opt, g_updater, D,
 
     train_state = {
         'epoch': 0,
-        'early_stop_tracker': 0,
         'best_epoch': 0,
         'best_epoch_metric': float('inf'),
     }
-
-    early_stop_state = 2
-    if early_stop[1] is not None:
-        early_stop_key, early_stop_crit = early_stop
-        early_stop_state = 1
-        if start_early_stop_when is not None:
-            train_state['pre_early_stop_tracker'] = 0,
-            train_state['pre_early_stop_metric'] = float('inf')
-            pre_early_stop_key, pre_early_stop_crit = start_early_stop_when
-            early_stop_state = 0
 
     train_metrics.add('G_loss', iteration_metric=True)
     train_metrics.add('D_loss', iteration_metric=True)
@@ -230,41 +219,5 @@ def train(config, dataset, device, n_epochs, batch_size, G, g_opt, g_updater, D,
         if epoch == n_epochs or epoch % checkpoint_every == 0:
             latest_cp = checkpoint_gan(
                 G, D, g_opt, d_opt, train_state, {"eval": eval_metrics.stats, "train": train_metrics.stats}, config, epoch=epoch, output_dir=checkpoint_dir)
-
-        ###
-        # Test for early stopping
-        ###
-        if early_stop_state == 2:
-            best_cp = latest_cp
-        elif early_stop_state == 0:
-            # Pre early stop phase
-            if eval_metrics.stats[pre_early_stop_key][-1] \
-                    < train_state['pre_early_stop_metric']:
-                train_state['pre_early_stop_tracker'] = 0
-                train_state['pre_early_stop_metric'] = \
-                    eval_metrics.stats[pre_early_stop_key][-1]
-            else:
-                train_state['pre_early_stop_tracker'] += 1
-                print(
-                    " > Pre-early stop tracker {}/{}".format(train_state['pre_early_stop_tracker'], pre_early_stop_crit))
-                if train_state['pre_early_stop_tracker'] \
-                        == pre_early_stop_crit:
-                    early_stop_state = 1
-
-            best_cp = latest_cp
-        else:
-            # Early stop phase
-            if eval_metrics.stats[early_stop_key][-1] < train_state['best_epoch_metric']:
-                train_state['early_stop_tracker'] = 0
-                train_state['best_epoch'] = epoch + 1
-                train_state['best_epoch_metric'] = eval_metrics.stats[
-                    early_stop_key][-1]
-                best_cp = latest_cp
-            else:
-                train_state['early_stop_tracker'] += 1
-                print(
-                    " > Early stop tracker {}/{}".format(train_state['early_stop_tracker'], early_stop_crit))
-                if train_state['early_stop_tracker'] == early_stop_crit:
-                    break
 
     return train_state, best_cp, train_metrics, eval_metrics
