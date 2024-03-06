@@ -24,13 +24,13 @@ config_schema = Schema({
         Optional("binary"): {"pos": int, "neg": int}
     },
     "model": {
-        "z_dim": int,
+        Optional("z_dim"): int,
         "architecture": Or({
             "name": "dcgan",
-            "g_filter_dim": int,
-            "d_filter_dim": int,
-            "g_num_blocks": int,
-            "d_num_blocks": int,
+            Optional("g_filter_dim"): int,
+            Optional("d_filter_dim"): int,
+            Optional("g_num_blocks"): int,
+            Optional("d_num_blocks"): int,
         }, {
             "name": "resnet",
             "g_filter_dim": int,
@@ -45,7 +45,7 @@ config_schema = Schema({
             "name": "ns"
         })
     },
-    "optimizer": {
+     Optional("optimizer"): {
         "lr": float,
         "beta1": Or(float, int),
         "beta2": Or(float, int),
@@ -54,7 +54,7 @@ config_schema = Schema({
         "step-1": Or(And(str, os.path.exists), {
             "epochs": int,
             "checkpoint-every": int,
-            "batch-size": int,
+            Optional("batch-size"): int,
             "disc-iters": int,
             Optional("early-stop"): {
                 "criteria": int,

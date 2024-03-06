@@ -40,7 +40,7 @@ class MetricsLogger:
             self.it_counter[name] = 0
 
     def reset_it_metrics(self):
-        for name in self.step_metrics:
+        for name in self.iteration_metrics:
             self.running_stats[name] = 0
             self.it_counter[name] = 0
 
@@ -69,18 +69,4 @@ class MetricsLogger:
         self.epoch += 1
 
         wandb.log(self.log_dict, commit=True)
-
-
-    def finalize_optim_epoch(self, step):
-        for name in self.iteration_metrics:
-            epoch_value = self.running_stats[name] / self.it_counter[name]
-            self.stats[name].append(epoch_value)
-            self.log_dict[self.apply_prefix(name)] = epoch_value
-
-            if self.log_epoch:
-                print(name, " = ", epoch_value)
-
-        self.log_dict[self.apply_prefix('epoch')] = step
-        wandb.log(self.log_dict, commit=True)
-
-
+        self.reset_it_metrics()

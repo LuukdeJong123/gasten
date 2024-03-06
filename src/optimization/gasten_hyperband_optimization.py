@@ -2,7 +2,6 @@ import torch
 from ConfigSpace import Configuration, ConfigurationSpace, Float, Integer
 from smac import HyperbandFacade, Scenario, MultiFidelityFacade
 from smac.intensifier.hyperband import Hyperband
-from smac.initial_design.random_design import RandomInitialDesign
 from torch.optim import Adam
 import argparse
 from dotenv import load_dotenv
@@ -114,8 +113,7 @@ def main():
     scenario = Scenario(configspace, deterministic=True, n_trials=14, min_budget=2, max_budget=10)
 
     intensifier = Hyperband(scenario, eta=2)
-    design = RandomInitialDesign(scenario, n_configs=8)
-    smac = MultiFidelityFacade(scenario, train, intensifier=intensifier, initial_design=design)
+    smac = MultiFidelityFacade(scenario, train, intensifier=intensifier)
     incumbent = smac.optimize()
 
     best_config = incumbent.get_dictionary()
