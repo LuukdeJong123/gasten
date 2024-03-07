@@ -66,7 +66,7 @@ def main():
     mu, sigma = fid.load_statistics_from_path(config['fid-stats-path'])
     fm_fn, dims = fid.get_inception_feature_map_fn(device)
     original_fid = fid.FID(
-        fm_fn, dims, test_noise.size(0), mu, sigma, device=device)
+        fm_fn, dims, test_noise.size(0), fid_stats_mu, fid_stat_sigma, device=device)
 
     fid_metrics = {
         'fid': original_fid
@@ -98,66 +98,50 @@ def main():
 
     def train(params: Configuration, seed: int = 42, budget: int = 0) -> Dict[str, float]:
         #TODO
-        #Kopieer vanaf start step 2 training alles
+        #Kopieer vanaf start step 2 training alles kopieren
         #Kopieer train_modified_gan function
         #Kopieer train function en haal alle dubbele dingen weg -> hier moet het meeste weg zoals g_updater
 
-
-        # C_name = os.path.splitext(os.path.basename(params['classifier']))[0]
-        # C, C_params, C_stats, C_args = construct_classifier_from_checkpoint(
-        #     params['classifier'], device=device)
-        # C.to(device)
-        # C.eval()
-        # C.output_feature_maps = True
-        #
-        # class_cache = ClassifierCache(C)
-        #
-        # def get_feature_map_fn(images, batch_idx, batch_size):
-        #     return class_cache.get(images, batch_idx, batch_size, output_feature_maps=True)[1]
-        #
-        # dims = get_feature_map_fn(
-        #     dataset.data[0:1].to(device), 0, 1).size(1)
-        #
-        # print(" > Computing statistics using original dataset")
-        # mu, sigma = compute_dataset_fid_stats(
-        #     dataset, get_feature_map_fn, dims, device=device, num_workers=num_workers)
-        # print("   ... done")
-        #
-        # conf_dist = LossSecondTerm(class_cache)
-        #
-        # fid_metrics = {
-        #     'fid': original_fid,
-        #     'conf_dist': conf_dist,
-        # }
-        #
-        # step2_metrics = []
-        # epoch = s1_epoch
-        #
-        # gan_path = get_gan_path_at_epoch(original_gan_cp_dir, epoch=epoch)
-        # if not os.path.exists(gan_path):
-        #     print(f" WARNING: gan at epoch {epoch} not found. skipping ...")
-        #
-        # gan_cp_dir = os.path.join(cp_dir, run_name)
-        #
-        # G, D, _, _ = construct_gan_from_checkpoint(
-        #     gan_path, device=device)
-        #
-        # g_crit, d_crit = construct_loss(config["model"]["loss"], D)
-        #
-        # g_optim, d_optim = construct_optimizers(config["optimizer"], G, D)
-        #
-        # g_updater = UpdateGeneratorGASTEN(g_crit, C, alpha=params['weight'])
-
         config['model']["architecture"]['g_num_blocks'] = params['n_blocks']
         config['model']["architecture"]['d_num_blocks'] = params['n_blocks']
-        G, D = construct_gan(config["model"], img_size, device)
+
+        C_name = os.path.splitext(os.path.basename(params['classifier']))[0]
+        C, C_params, C_stats, C_args = construct_classifier_from_checkpoint(
+            params['classifier'], device=device)
+        C.to(device)
+        C.eval()
+        C.output_feature_maps = True
+
+        class_cache = ClassifierCache(C)
+
+        conf_dist = LossSecondTerm(class_cache)
+
+        fid_metrics = {
+            'fid': original_fid,
+            'conf_dist': conf_dist,
+        }
+
+        step2_metrics = []
+        cp_dir = 'op basis van step 1'
+        original_gan_cp_dir = os.path.join(cp_dir, 'step-1')
+        gan_path = get_gan_path_at_epoch(original_gan_cp_dir, epoch=10)
+        if not os.path.exists(gan_path):
+            print(f" WARNING: gan at epoch 10 not found. skipping ...")
+
+        run_name = '{}_{}_{}'.format(C_name, params['weight'], 10)
+
+        gan_cp_dir = os.path.join(cp_dir, run_name)
+
+        G, D, _, _ = construct_gan_from_checkpoint(
+            gan_path, device=device)
 
         g_crit, d_crit = construct_loss(config["model"]["loss"], D)
-        g_updater = UpdateGeneratorGAN(g_crit)
 
-        # Initialize optimizers
+
         g_opt = Adam(G.parameters(), lr=params['g_lr'], betas=(params['g_beta1'], params['g_beta2']))
         d_opt = Adam(D.parameters(), lr=params['d_lr'], betas=(params['d_beta1'], params['d_beta2']))
+
+        g_updater = UpdateGeneratorGASTEN(g_crit, C, alpha=params['weight'])
 
         for loss_term in g_updater.get_loss_terms():
             train_metrics.add(loss_term, iteration_metric=True)

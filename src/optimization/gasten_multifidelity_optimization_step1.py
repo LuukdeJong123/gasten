@@ -12,13 +12,13 @@ from smac.intensifier.hyperband import Hyperband
 from src.utils.config import read_config
 from src.gan import construct_gan, construct_loss
 from src.datasets import load_dataset
-from src.utils import load_z
 from src.gan.update_g import UpdateGeneratorGAN
 from src.metrics import fid
-from src.utils import seed_worker
 import math
 from src.utils import MetricsLogger, group_images
 from src.gan.train import train_disc, train_gen, loss_terms_to_str, evaluate
+from src.utils.checkpoint import checkpoint_gan
+from src.utils import load_z, set_seed, setup_reprod, create_checkpoint_path, gen_seed, seed_worker
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -47,10 +47,11 @@ def main():
     test_noise, test_noise_conf = load_z(config['test-noise'])
     batch_size = config['train']['step-1']['batch-size']
 
-    mu, sigma = fid.load_statistics_from_path(config['fid-stats-path'])
+    fid_stats_mu, fid_stat_sigma = fid.load_statistics_from_path(config['fid-stats-path'])
     fm_fn, dims = fid.get_inception_feature_map_fn(device)
     original_fid = fid.FID(
-        fm_fn, dims, test_noise.size(0), mu, sigma, device=device)
+        fm_fn, dims, test_noise.size(0), fid_stats_mu, fid_stat_sigma, device=device)
+
     fid_metrics = {
         'fid': original_fid
     }
@@ -79,6 +80,9 @@ def main():
     train_metrics.add('G_loss', iteration_metric=True)
     train_metrics.add('D_loss', iteration_metric=True)
 
+    run_id = wandb.util.generate_id()
+    cp_dir = create_checkpoint_path(config, run_id)
+
     def train(params: Configuration, seed: int = 42, budget: int = 0) -> float:
         config['model']["architecture"]['g_num_blocks'] = params['n_blocks']
         config['model']["architecture"]['d_num_blocks'] = params['n_blocks']
@@ -91,6 +95,12 @@ def main():
         # Initialize optimizers
         g_opt = Adam(G.parameters(), lr=params['g_lr'], betas=(params['g_beta1'], params['g_beta2']))
         d_opt = Adam(D.parameters(), lr=params['d_lr'], betas=(params['d_beta1'], params['d_beta2']))
+
+        train_state = {
+            'epoch': 0,
+            'best_epoch': 0,
+            'best_epoch_metric': float('inf'),
+        }
 
         for loss_term in g_updater.get_loss_terms():
             train_metrics.add(loss_term, iteration_metric=True)
@@ -157,6 +167,8 @@ def main():
             ###
             # Evaluate after epoch
             ###
+            train_state['epoch'] += 1
+
             train_metrics.finalize_epoch()
 
             evaluate(G, fid_metrics, eval_metrics, batch_size,
@@ -164,9 +176,12 @@ def main():
 
             eval_metrics.finalize_epoch()
 
-            #TODO
-            #Check point van elk configuratie aan het einde (wss met budget = 10), opslaan met config, budget en score
-            #Kan je in 2 stap checken welke configuratie is het beste, op basis daarvan de GAN ophalen
+            config_checkpoint_dir = os.path.join(cp_dir, str(params.config_id))
+
+            checkpoint_gan(
+                G, D, g_opt, d_opt, train_state,
+                {"eval": eval_metrics.stats, "train": train_metrics.stats}, config,
+                epoch=epoch, output_dir=config_checkpoint_dir)
 
         return eval_metrics.stats['fid'][0]
 
