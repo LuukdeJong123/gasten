@@ -66,12 +66,12 @@ config_schema = Schema({
             Optional("early-stop"): {
                 "criteria": int,
             },
-            "epochs": int,
-            "checkpoint-every": int,
+            Optional("epochs"): int,
+            Optional("checkpoint-every"): int,
             "batch-size": int,
             "disc-iters": int,
-            "classifier": [And(str, os.path.exists)],
-            "weight": [Or(int, float, "mgda", "mgda:norm")]
+            Optional("classifier"): [And(str, os.path.exists)],
+            Optional("weight"): [Or(int, float, "mgda", "mgda:norm")]
         }
     }
 })

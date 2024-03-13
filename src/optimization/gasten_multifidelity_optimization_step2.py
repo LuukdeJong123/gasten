@@ -12,10 +12,9 @@ from smac.multi_objective.parego import ParEGO
 from typing import Dict
 
 from src.metrics import fid, LossSecondTerm
-from src.gan.update_g import UpdateGeneratorGAN, UpdateGeneratorGASTEN
-from src.utils import load_z, set_seed, setup_reprod, create_checkpoint_path, gen_seed, seed_worker
-from src.utils.checkpoint import construct_gan_from_checkpoint, construct_classifier_from_checkpoint, \
-    get_gan_path_at_epoch, load_gan_train_state
+from src.gan.update_g import UpdateGeneratorGASTEN
+from src.utils import load_z, setup_reprod
+from src.utils.checkpoint import construct_classifier_from_checkpoint
 from src.classifier import ClassifierCache
 from src.utils.config import read_config
 from src.gan import construct_gan, construct_loss
@@ -24,6 +23,7 @@ from src.utils import seed_worker
 import math
 from src.utils import MetricsLogger, group_images
 from src.gan.train import train_disc, train_gen, loss_terms_to_str, evaluate
+import json
 
 
 def parse_args():
@@ -31,16 +31,6 @@ def parse_args():
     parser.add_argument("--config", dest="config_path",
                         required=True, help="Config file")
     return parser.parse_args()
-
-
-def compute_dataset_fid_stats(dset, get_feature_map_fn, dims, batch_size=64, device='cpu', num_workers=0):
-    dataloader = torch.utils.data.DataLoader(
-        dset, batch_size=batch_size, shuffle=False, num_workers=num_workers, worker_init_fn=seed_worker)
-
-    m, s = fid.calculate_activation_statistics_dataloader(
-        dataloader, get_feature_map_fn, dims=dims, device=device)
-
-    return m, s
 
 
 def main():
@@ -59,18 +49,14 @@ def main():
         config["dataset"]["name"], config["data-dir"], pos_class, neg_class)
 
     n_disc_iters = config['train']['step-1']['disc-iters']
-    num_workers = config["num-workers"]
+
     test_noise, test_noise_conf = load_z(config['test-noise'])
     batch_size = config['train']['step-1']['batch-size']
 
     mu, sigma = fid.load_statistics_from_path(config['fid-stats-path'])
     fm_fn, dims = fid.get_inception_feature_map_fn(device)
     original_fid = fid.FID(
-        fm_fn, dims, test_noise.size(0), fid_stats_mu, fid_stat_sigma, device=device)
-
-    fid_metrics = {
-        'fid': original_fid
-    }
+        fm_fn, dims, test_noise.size(0), mu, sigma, device=device)
 
     dataset_id = datetime.now().strftime("%b%dT%H-%M")
 
@@ -96,16 +82,11 @@ def main():
     train_metrics.add('G_loss', iteration_metric=True)
     train_metrics.add('D_loss', iteration_metric=True)
 
-    def train(params: Configuration, seed: int = 42, budget: int = 0) -> Dict[str, float]:
-        #TODO
-        #Kopieer vanaf start step 2 training alles kopieren
-        #Kopieer train_modified_gan function
-        #Kopieer train function en haal alle dubbele dingen weg -> hier moet het meeste weg zoals g_updater
-
+    def train(params: Configuration, seed: int, budget: int) -> Dict[str, float]:
+        setup_reprod(seed)
         config['model']["architecture"]['g_num_blocks'] = params['n_blocks']
         config['model']["architecture"]['d_num_blocks'] = params['n_blocks']
 
-        C_name = os.path.splitext(os.path.basename(params['classifier']))[0]
         C, C_params, C_stats, C_args = construct_classifier_from_checkpoint(
             params['classifier'], device=device)
         C.to(device)
@@ -121,25 +102,36 @@ def main():
             'conf_dist': conf_dist,
         }
 
-        step2_metrics = []
-        cp_dir = 'op basis van step 1'
-        original_gan_cp_dir = os.path.join(cp_dir, 'step-1')
-        gan_path = get_gan_path_at_epoch(original_gan_cp_dir, epoch=10)
+        gan_path = 'tools/out/gasten_20240220_7v1_optim_test/mnist-7v1_optim/Mar08T14-43_2zaryu2o/1'
         if not os.path.exists(gan_path):
             print(f" WARNING: gan at epoch 10 not found. skipping ...")
 
-        run_name = '{}_{}_{}'.format(C_name, params['weight'], 10)
+        print("Loading GAN from {} ...".format(gan_path))
+        with open(os.path.join(gan_path, 'config.json'), 'r') as config_file:
+            config_from_path = json.load(config_file)
 
-        gan_cp_dir = os.path.join(cp_dir, run_name)
+        model_params = config_from_path['model']
 
-        G, D, _, _ = construct_gan_from_checkpoint(
-            gan_path, device=device)
+        gen_cp = torch.load(os.path.join(
+            gan_path, 'generator.pth'), map_location=device)
+        dis_cp = torch.load(os.path.join(
+            gan_path, 'discriminator.pth'), map_location=device)
 
-        g_crit, d_crit = construct_loss(config["model"]["loss"], D)
-
+        G, D = construct_gan(
+            model_params, img_size, device=device)
 
         g_opt = Adam(G.parameters(), lr=params['g_lr'], betas=(params['g_beta1'], params['g_beta2']))
         d_opt = Adam(D.parameters(), lr=params['d_lr'], betas=(params['d_beta1'], params['d_beta2']))
+
+        G.load_state_dict(gen_cp['state'])
+        D.load_state_dict(dis_cp['state'])
+        g_opt.load_state_dict(gen_cp['optimizer'])
+        d_opt.load_state_dict(dis_cp['optimizer'])
+
+        G.eval()
+        D.eval()
+
+        g_crit, d_crit = construct_loss(config_from_path["model"]["loss"], D)
 
         g_updater = UpdateGeneratorGASTEN(g_crit, C, alpha=params['weight'])
 
@@ -229,20 +221,23 @@ def main():
     n_blocks = Integer("n_blocks", (1, 5), default=3)
     weights = Integer("weight", (1, 30), default=25)
     classifiers = Categorical('classifier',
-                              ['models/mnist.7v1/cnn-1-1.38825',
-                               'models/mnist.7v1/cnn-2-1.38825',
-                               'models/mnist.7v1/cnn-4-1.38825'],
-                              default='models/mnist.7v1/cnn-2-1.38825')
+                              [os.environ['FILESDIR'] + '/' + 'models/mnist.7v1/cnn-1-1.99609',
+                               os.environ['FILESDIR'] + '/' + 'models/mnist.7v1/cnn-2-1.88251',
+                               os.environ['FILESDIR'] + '/' + 'models/mnist.7v1/cnn-4-1.25068',
+                               os.environ['FILESDIR'] + '/' + 'models/mnist.7v1/cnn-8-1.23048'],
+                              default=os.environ['FILESDIR'] + '/' + 'models/mnist.7v1/cnn-2-1.88251')
 
     configspace = ConfigurationSpace()
-    configspace.add_hyperparameters([G_lr, D_lr, G_beta1, D_beta1, G_beta2, D_beta2, n_blocks, weights])
+    configspace.add_hyperparameters([G_lr, D_lr, G_beta1, D_beta1, G_beta2, D_beta2, n_blocks, weights, classifiers])
 
     objectives = ["fid", "confusion_distance"]
 
-    scenario = Scenario(configspace, objectives=objectives, deterministic=True, n_trials=224, min_budget=2, max_budget=10)
+    scenario = Scenario(configspace, objectives=objectives, deterministic=True, n_trials=224, min_budget=2,
+                        max_budget=40)
     multi_objective_algorithm = ParEGO(scenario)
     intensifier = Hyperband(scenario, eta=2)
-    smac = MultiFidelityFacade(scenario, train, intensifier=intensifier, multi_objective_algorithm=multi_objective_algorithm)
+    smac = MultiFidelityFacade(scenario, train, intensifier=intensifier,
+                               multi_objective_algorithm=multi_objective_algorithm)
     incumbents = smac.optimize()
 
     default_cost = smac.validate(configspace.get_default_configuration())

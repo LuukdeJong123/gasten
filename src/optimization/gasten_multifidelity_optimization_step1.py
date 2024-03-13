@@ -83,7 +83,8 @@ def main():
     run_id = wandb.util.generate_id()
     cp_dir = create_checkpoint_path(config, run_id)
 
-    def train(params: Configuration, seed: int = 42, budget: int = 0) -> float:
+    def train(params: Configuration, seed: int, budget: int) -> float:
+        setup_reprod(seed)
         config['model']["architecture"]['g_num_blocks'] = params['n_blocks']
         config['model']["architecture"]['d_num_blocks'] = params['n_blocks']
 
@@ -176,12 +177,10 @@ def main():
 
             eval_metrics.finalize_epoch()
 
-            config_checkpoint_dir = os.path.join(cp_dir, str(params.config_id))
-
-            checkpoint_gan(
+        config_checkpoint_dir = os.path.join(cp_dir, str(params.config_id))
+        checkpoint_gan(
                 G, D, g_opt, d_opt, train_state,
-                {"eval": eval_metrics.stats, "train": train_metrics.stats}, config,
-                epoch=epoch, output_dir=config_checkpoint_dir)
+                {"eval": eval_metrics.stats, "train": train_metrics.stats}, config, output_dir=config_checkpoint_dir)
 
         return eval_metrics.stats['fid'][0]
 
@@ -200,12 +199,12 @@ def main():
     intensifier = Hyperband(scenario, eta=2)
     smac = MultiFidelityFacade(scenario, train, intensifier=intensifier)
     incumbent = smac.optimize()
-
     best_config = incumbent.get_dictionary()
 
     print("Best Configuration:", best_config)
-
+    print("Best Configuration id:", incumbent.config_id)
     wandb.finish()
+
 
 if __name__ == '__main__':
     main()
