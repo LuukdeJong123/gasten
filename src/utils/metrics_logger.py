@@ -28,16 +28,17 @@ class MetricsLogger:
         return f'{self.prefix}/{name}' if self.prefix is not None else name
 
     def add(self, name, iteration_metric=False):
-        self.stats[name] = []
-        wandb.define_metric(self.apply_prefix(name),
-                            step_metric=self.apply_prefix('epoch'))
-        self.log_dict[self.apply_prefix(name)] = None
+        if name not in self.iteration_metrics:
+            self.stats[name] = []
+            wandb.define_metric(self.apply_prefix(name),
+                                step_metric=self.apply_prefix('epoch'))
+            self.log_dict[self.apply_prefix(name)] = None
 
-        if iteration_metric:
-            self.iteration_metrics.append(name)
-            self.stats[f'{name}_per_it'] = []
-            self.running_stats[name] = 0
-            self.it_counter[name] = 0
+            if iteration_metric:
+                self.iteration_metrics.append(name)
+                self.stats[f'{name}_per_it'] = []
+                self.running_stats[name] = 0
+                self.it_counter[name] = 0
 
     def reset_it_metrics(self):
         for name in self.iteration_metrics:
