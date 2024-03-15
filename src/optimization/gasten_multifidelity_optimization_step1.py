@@ -182,7 +182,7 @@ def main():
                 G, D, g_opt, d_opt, train_state,
                 {"eval": eval_metrics.stats, "train": train_metrics.stats}, config, output_dir=config_checkpoint_dir)
 
-        return eval_metrics.stats['fid'][0]
+        return eval_metrics.stats['fid'][round(budget)-1]
 
     G_lr = Float("g_lr", (1e-4, 1e-3), default=0.0002)
     D_lr = Float("d_lr", (1e-4, 1e-3), default=0.0002)

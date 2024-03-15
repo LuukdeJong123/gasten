@@ -208,8 +208,8 @@ def main():
             eval_metrics.finalize_epoch()
 
         return {
-            "fid": eval_metrics.stats['fid'][0],
-            "confusion_distance": eval_metrics.stats['conf_dist'][0],
+            "fid": eval_metrics.stats['fid'][round(budget)-1],
+            "confusion_distance": eval_metrics.stats['conf_dist'][round(budget)-1],
         }
 
     G_lr = Float("g_lr", (1e-4, 1e-3), default=0.0002)
@@ -235,7 +235,7 @@ def main():
     scenario = Scenario(configspace, objectives=objectives, deterministic=True, n_trials=224, min_budget=2,
                         max_budget=40)
     multi_objective_algorithm = ParEGO(scenario)
-    intensifier = Hyperband(scenario, eta=2)
+    intensifier = Hyperband(scenario, eta=3)
     smac = MultiFidelityFacade(scenario, train, intensifier=intensifier,
                                multi_objective_algorithm=multi_objective_algorithm)
     incumbents = smac.optimize()
