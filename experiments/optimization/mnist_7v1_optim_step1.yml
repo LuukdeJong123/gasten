@@ -1,4 +1,4 @@
-project: gasten_20240220_7v1_optim
+project: gasten_20241903_7v1_optim_step1
 name: mnist-7v1_optim
 out-dir: out
 data-dir: data
@@ -6,7 +6,7 @@ test-noise: data/z/z_2000_64
 fixed-noise: 2000
 
 device: cuda:0
-num-workers: 6
+num-workers: 0
 
 fid-stats-path: data/fid-stats/stats.inception.mnist.7v1.npz
 
@@ -36,24 +36,3 @@ train:
     checkpoint-every: 1
     disc-iters: 1
     batch-size: 64
-
-  step-2:
-    epochs: 2
-    checkpoint-every: 10
-    step-1-epochs:
-      - 10
-    batch-size: 64
-    disc-iters: 1
-    classifier:
-      - models/mnist.7v1/cnn-1-1.9687
-      - models/mnist.7v1/cnn-2-1.4314
-      - models/mnist.7v1/cnn-4-1.37421
-    weight:
-      - 0
-      - mgda
-      - 5
-      - 10
-      - 15
-      - 20
-      - 25
-      - 30

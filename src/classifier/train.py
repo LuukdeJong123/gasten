@@ -290,6 +290,9 @@ def main():
     print(test_acc)
     print(test_loss)
 
+    #TODO
+    #Delete unnecessary checkpoints?
+
 
 if __name__ == '__main__':
     main()

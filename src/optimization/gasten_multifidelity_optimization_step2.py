@@ -7,7 +7,6 @@ from dotenv import load_dotenv
 import wandb
 import os
 from datetime import datetime
-from smac.intensifier.hyperband import Hyperband
 from smac.multi_objective.parego import ParEGO
 from typing import Dict
 
@@ -48,10 +47,10 @@ def main():
     dataset, num_classes, img_size = load_dataset(
         config["dataset"]["name"], config["data-dir"], pos_class, neg_class)
 
-    n_disc_iters = config['train']['step-1']['disc-iters']
+    n_disc_iters = config['train']['step-2']['disc-iters']
 
     test_noise, test_noise_conf = load_z(config['test-noise'])
-    batch_size = config['train']['step-1']['batch-size']
+    batch_size = config['train']['step-2']['batch-size']
 
     mu, sigma = fid.load_statistics_from_path(config['fid-stats-path'])
     fm_fn, dims = fid.get_inception_feature_map_fn(device)
@@ -69,11 +68,32 @@ def main():
 
     log_every_g_iter = 50
 
+    with open('step-1-best-config.txt', 'r') as file:
+        gan_path = file.read()
+
+    if not os.path.exists(gan_path):
+        print(f" WARNING: gan at epoch 10 not found.")
+        exit()
+
+    print("Loading GAN from {} ...".format(gan_path))
+    with open(os.path.join(gan_path, 'config.json'), 'r') as config_file:
+        config_from_path = json.load(config_file)
+
+    model_params = config_from_path['model']
+
+    gen_cp = torch.load(os.path.join(
+        gan_path, 'generator.pth'), map_location=device)
+    dis_cp = torch.load(os.path.join(
+        gan_path, 'discriminator.pth'), map_location=device)
+
+    G, D = construct_gan(
+        model_params, img_size, device=device)
+
     wandb.init(project=config['project'],
                dir=os.environ['FILESDIR'],
                group=config['name'],
                entity=os.environ['ENTITY'],
-               job_type='step-1-optimization',
+               job_type='step-2-optimization',
                name=dataset_id)
 
     train_metrics = MetricsLogger(prefix='train')
@@ -101,24 +121,6 @@ def main():
             'fid': original_fid,
             'conf_dist': conf_dist,
         }
-
-        gan_path = 'tools/out/gasten_20240220_7v1_optim_test/mnist-7v1_optim/Mar08T14-43_2zaryu2o/1'
-        if not os.path.exists(gan_path):
-            print(f" WARNING: gan at epoch 10 not found. skipping ...")
-
-        print("Loading GAN from {} ...".format(gan_path))
-        with open(os.path.join(gan_path, 'config.json'), 'r') as config_file:
-            config_from_path = json.load(config_file)
-
-        model_params = config_from_path['model']
-
-        gen_cp = torch.load(os.path.join(
-            gan_path, 'generator.pth'), map_location=device)
-        dis_cp = torch.load(os.path.join(
-            gan_path, 'discriminator.pth'), map_location=device)
-
-        G, D = construct_gan(
-            model_params, img_size, device=device)
 
         g_opt = Adam(G.parameters(), lr=params['g_lr'], betas=(params['g_beta1'], params['g_beta2']))
         d_opt = Adam(D.parameters(), lr=params['d_lr'], betas=(params['d_beta1'], params['d_beta2']))
@@ -232,21 +234,16 @@ def main():
 
     objectives = ["fid", "confusion_distance"]
 
-    scenario = Scenario(configspace, objectives=objectives, deterministic=True, n_trials=224, min_budget=2,
+    scenario = Scenario(configspace, objectives=objectives, deterministic=True, n_trials=10, min_budget=2,
                         max_budget=40)
     multi_objective_algorithm = ParEGO(scenario)
-    intensifier = Hyperband(scenario, eta=3)
-    smac = MultiFidelityFacade(scenario, train, intensifier=intensifier,
-                               multi_objective_algorithm=multi_objective_algorithm)
+    smac = MultiFidelityFacade(scenario, train, multi_objective_algorithm=multi_objective_algorithm)
     incumbents = smac.optimize()
 
-    default_cost = smac.validate(configspace.get_default_configuration())
-    print(f"Validated costs from default config: \n--- {default_cost}\n")
-
-    print("Validated costs from the Pareto front (incumbents):")
+    print("Configs from the Pareto front (incumbents):")
     for incumbent in incumbents:
-        cost = smac.validate(incumbent)
-        print("---", cost)
+        print("Best Configuration:", incumbent.get_dictionary())
+        print("Configuration id:", incumbent.config_id)
 
     wandb.finish()
 

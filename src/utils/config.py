@@ -51,7 +51,7 @@ config_schema = Schema({
         "beta2": Or(float, int),
     },
     "train": {
-        "step-1": Or(And(str, os.path.exists), {
+        Optional("step-1"): Or(And(str, os.path.exists), {
             "epochs": int,
             "checkpoint-every": int,
             Optional("batch-size"): int,
@@ -60,7 +60,7 @@ config_schema = Schema({
                 "criteria": int,
             }
         }),
-        "step-2": {
+        Optional("step-2"): {
             # TODO
             Optional("step-1-epochs", default="best"): [Or(int, "best", "last")],
             Optional("early-stop"): {
