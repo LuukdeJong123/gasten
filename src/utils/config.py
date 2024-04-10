@@ -1,91 +1,23 @@
 import os
 import yaml
-from src.datasets import valid_dataset
-from src.gan.loss import valid_loss
-from schema import Schema, SchemaError, Optional, And, Or
+from schema import SchemaError
+from src.utils.schema import CONFIG_SCHEMA_CLUSTERING, CONFIG_SCHEMA_GASTEN
 
-
-config_schema = Schema({
-    "project": str,
-    "name": str,
-    "out-dir": os.path.exists,
-    "data-dir": os.path.exists,
-    "fid-stats-path": os.path.exists,
-    "fixed-noise": Or(And(str, os.path.exists), int),
-    "test-noise": os.path.exists,
-    Optional("compute-fid"): bool,
-    Optional("device", default="cpu"): str,
-    Optional("num-workers", default=0): int,
-    Optional("num-runs", default=1): int,
-    Optional("step-1-seeds"): [int],
-    Optional("step-2-seeds"): [int],
-    "dataset": {
-        "name": And(str, valid_dataset),
-        Optional("binary"): {"pos": int, "neg": int}
-    },
-    "model": {
-        Optional("z_dim"): int,
-        "architecture": Or({
-            "name": "dcgan",
-            Optional("g_filter_dim"): int,
-            Optional("d_filter_dim"): int,
-            Optional("g_num_blocks"): int,
-            Optional("d_num_blocks"): int,
-        }, {
-            "name": "resnet",
-            "g_filter_dim": int,
-            "d_filter_dim": int,
-        }),
-        "loss": Or({
-            "name": "wgan-gp",
-            "args": {
-                "lambda": int,
-            }
-        }, {
-            "name": "ns"
-        })
-    },
-     Optional("optimizer"): {
-        "lr": float,
-        "beta1": Or(float, int),
-        "beta2": Or(float, int),
-    },
-    "train": {
-        Optional("step-1"): Or(And(str, os.path.exists), {
-            "epochs": int,
-            "checkpoint-every": int,
-            Optional("batch-size"): int,
-            "disc-iters": int,
-            Optional("early-stop"): {
-                "criteria": int,
-            }
-        }),
-        Optional("step-2"): {
-            # TODO
-            Optional("step-1-epochs", default="best"): [Or(int, "best", "last")],
-            Optional("early-stop"): {
-                "criteria": int,
-            },
-            Optional("epochs"): int,
-            Optional("checkpoint-every"): int,
-            "batch-size": int,
-            "disc-iters": int,
-            Optional("classifier"): [And(str, os.path.exists)],
-            Optional("weight"): [Or(int, float, "mgda", "mgda:norm")]
-        }
-    }
-})
 
 def read_config(path):
     with open(path, 'r') as file:
         config = yaml.safe_load(file)
         # add paths
-        for rel_path in ['out-dir', 'data-dir', 'fid-stats-path', 'test-noise'] :
+        for rel_path in ['out-dir', 'data-dir', 'test-noise']:
             config[rel_path] = os.environ['FILESDIR'] + '/' + config[rel_path]
+
+        if 'fid-stats-path' in config:
+            config['fid-stats-path'] = os.environ['FILESDIR'] + '/' + config['fid-stats-path']
+
         if "classifier" in config['train']['step-2']:
             config['train']['step-2']['classifier'] = [(os.environ['FILESDIR'] + '/' + rel_path) for rel_path in config['train']['step-2']['classifier']]
     try:
-        config_schema.validate(config)
+        CONFIG_SCHEMA_GASTEN.validate(config)
     except SchemaError as se:
         raise se
 
@@ -98,4 +30,19 @@ def read_config(path):
         print("Number of mod_gan seeds must be equal to number of runs")
         exit(-1)
 
+    return config
+
+
+def read_config_clustering(path):
+    with open(path, 'r') as file:
+        config = yaml.safe_load(file)
+        # add paths
+        for rel_path in ['data', 'fid-stats', 'clustering']:
+            config['dir'][rel_path] = os.environ['FILESDIR'] + '/' + config['dir'][rel_path]
+        if "classifier" in config['gasten']:
+            config['gasten']['classifier'] = [(os.environ['FILESDIR'] + '/' + rel_path) for rel_path in config['gasten']['classifier']]
+    try:
+        CONFIG_SCHEMA_CLUSTERING.validate(config)
+    except SchemaError as se:
+        raise se
     return config

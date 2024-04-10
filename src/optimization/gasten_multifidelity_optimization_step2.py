@@ -12,23 +12,36 @@ from typing import Dict
 
 from src.metrics import fid, LossSecondTerm
 from src.gan.update_g import UpdateGeneratorGASTEN
-from src.utils import load_z, setup_reprod
 from src.utils.checkpoint import construct_classifier_from_checkpoint
 from src.classifier import ClassifierCache
 from src.utils.config import read_config
 from src.gan import construct_gan, construct_loss
 from src.datasets import load_dataset
-from src.utils import seed_worker
 import math
 from src.utils import MetricsLogger, group_images
 from src.gan.train import train_disc, train_gen, loss_terms_to_str, evaluate
 import json
+from src.utils import load_z, setup_reprod, create_checkpoint_path, seed_worker
+from src.utils.checkpoint import checkpoint_gan
+
+
+def list_of_strings(arg):
+    return arg.split(',')
 
 
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", dest="config_path",
                         required=True, help="Config file")
+    parser.add_argument('--classifiers', dest='classifier_path',
+                        required=True, help="Classifier paths", type=list_of_strings)
+    parser.add_argument('--pos', dest='pos_class', default=9,
+                        type=int, help='Positive class for binary classification')
+    parser.add_argument('--neg', dest='neg_class', default=4,
+                        type=int, help='Negative class for binary classification')
+    parser.add_argument('--dataset', dest='dataset',
+                        default='mnist', help='Dataset (mnist or fashion-mnist or cifar10)')
+    parser.add_argument('--fid-stats', dest='fid_stats')
     return parser.parse_args()
 
 
@@ -36,23 +49,27 @@ def main():
     load_dotenv()
     args = parse_args()
     config = read_config(args.config_path)
+    classifiers = args.classifier_path
     device = torch.device(config["device"])
 
-    pos_class = None
-    neg_class = None
-    if "binary" in config["dataset"]:
-        pos_class = config["dataset"]["binary"]["pos"]
-        neg_class = config["dataset"]["binary"]["neg"]
+    if args.pos_class is not None and args.neg_class is not None:
+        pos_class = args.pos_class
+        neg_class = args.neg_class
+    else:
+        print('No positive and or negative class given!')
+        exit()
 
     dataset, num_classes, img_size = load_dataset(
-        config["dataset"]["name"], config["data-dir"], pos_class, neg_class)
+        args.dataset, config["data-dir"], pos_class, neg_class)
+
+    config["model"]["image-size"] = img_size
 
     n_disc_iters = config['train']['step-2']['disc-iters']
 
     test_noise, test_noise_conf = load_z(config['test-noise'])
     batch_size = config['train']['step-2']['batch-size']
 
-    mu, sigma = fid.load_statistics_from_path(config['fid-stats-path'])
+    mu, sigma = fid.load_statistics_from_path(args.fid_stats)
     fm_fn, dims = fid.get_inception_feature_map_fn(device)
     original_fid = fid.FID(
         fm_fn, dims, test_noise.size(0), mu, sigma, device=device)
@@ -72,7 +89,7 @@ def main():
         gan_path = file.read()
 
     if not os.path.exists(gan_path):
-        print(f" WARNING: gan at epoch 10 not found.")
+        print(f" WARNING: gan not found.")
         exit()
 
     print("Loading GAN from {} ...".format(gan_path))
@@ -102,10 +119,11 @@ def main():
     train_metrics.add('G_loss', iteration_metric=True)
     train_metrics.add('D_loss', iteration_metric=True)
 
+    run_id = wandb.util.generate_id()
+    cp_dir = create_checkpoint_path(config, run_id)
+
     def train(params: Configuration, seed: int, budget: int) -> Dict[str, float]:
         setup_reprod(seed)
-        config['model']["architecture"]['g_num_blocks'] = params['n_blocks']
-        config['model']["architecture"]['d_num_blocks'] = params['n_blocks']
 
         C, C_params, C_stats, C_args = construct_classifier_from_checkpoint(
             params['classifier'], device=device)
@@ -124,6 +142,12 @@ def main():
 
         g_opt = Adam(G.parameters(), lr=params['g_lr'], betas=(params['g_beta1'], params['g_beta2']))
         d_opt = Adam(D.parameters(), lr=params['d_lr'], betas=(params['d_beta1'], params['d_beta2']))
+
+        train_state = {
+            'epoch': 0,
+            'best_epoch': 0,
+            'best_epoch_metric': float('inf'),
+        }
 
         G.load_state_dict(gen_cp['state'])
         D.load_state_dict(dis_cp['state'])
@@ -196,7 +220,7 @@ def main():
                 fake = G(fixed_noise).detach().cpu()
                 G.train()
 
-            img = group_images(fake, classifier=None, device=device)
+            img = group_images(fake, classifier=C, device=device)
             eval_metrics.log_image('samples', img)
 
             ###
@@ -209,9 +233,14 @@ def main():
 
             eval_metrics.finalize_epoch()
 
+        config_checkpoint_dir = os.path.join(cp_dir, str(params.config_id))
+        checkpoint_gan(
+            G, D, g_opt, d_opt, train_state,
+            {"eval": eval_metrics.stats, "train": train_metrics.stats}, config, output_dir=config_checkpoint_dir)
+
         return {
-            "fid": eval_metrics.stats['fid'][round(budget)-1],
-            "confusion_distance": eval_metrics.stats['conf_dist'][round(budget)-1],
+            "fid": eval_metrics.stats['fid'][round(budget) - 1],
+            "confusion_distance": eval_metrics.stats['conf_dist'][round(budget) - 1],
         }
 
     G_lr = Float("g_lr", (1e-4, 1e-3), default=0.0002)
@@ -220,21 +249,15 @@ def main():
     D_beta1 = Float("d_beta1", (0.1, 1), default=0.5)
     G_beta2 = Float("g_beta2", (0.1, 1), default=0.999)
     D_beta2 = Float("d_beta2", (0.1, 1), default=0.999)
-    n_blocks = Integer("n_blocks", (1, 5), default=3)
     weights = Integer("weight", (1, 30), default=25)
-    classifiers = Categorical('classifier',
-                              [os.environ['FILESDIR'] + '/' + 'models/mnist.7v1/cnn-1-1.99609',
-                               os.environ['FILESDIR'] + '/' + 'models/mnist.7v1/cnn-2-1.88251',
-                               os.environ['FILESDIR'] + '/' + 'models/mnist.7v1/cnn-4-1.25068',
-                               os.environ['FILESDIR'] + '/' + 'models/mnist.7v1/cnn-8-1.23048'],
-                              default=os.environ['FILESDIR'] + '/' + 'models/mnist.7v1/cnn-2-1.88251')
+    classifiers = Categorical('classifier', classifiers)
 
     configspace = ConfigurationSpace()
-    configspace.add_hyperparameters([G_lr, D_lr, G_beta1, D_beta1, G_beta2, D_beta2, n_blocks, weights, classifiers])
+    configspace.add_hyperparameters([G_lr, D_lr, G_beta1, D_beta1, G_beta2, D_beta2, weights, classifiers])
 
     objectives = ["fid", "confusion_distance"]
 
-    scenario = Scenario(configspace, objectives=objectives, deterministic=True, n_trials=10, min_budget=2,
+    scenario = Scenario(configspace, objectives=objectives, deterministic=True, n_trials=1, min_budget=2,
                         max_budget=40)
     multi_objective_algorithm = ParEGO(scenario)
     smac = MultiFidelityFacade(scenario, train, multi_objective_algorithm=multi_objective_algorithm)
@@ -244,6 +267,19 @@ def main():
     for incumbent in incumbents:
         print("Best Configuration:", incumbent.get_dictionary())
         print("Configuration id:", incumbent.config_id)
+
+    cost_with_lowest_conf_dist = float('inf')  # Initialize with positive infinity to ensure any number will be lower
+    for i in range(len(smac.intensifier.trajectory[len(smac.intensifier.trajectory) - 1].costs)):
+        if smac.intensifier.trajectory[len(smac.intensifier.trajectory) - 1].costs[i][1] < cost_with_lowest_conf_dist:
+            cost_with_lowest_conf_dist = i
+
+    config_with_lowest_conf_dist = smac.intensifier.trajectory[len(smac.intensifier.trajectory) - 1].config_ids[
+        cost_with_lowest_conf_dist]
+    with open('step-2-best-config.txt', 'w') as file:
+        file.write(os.path.join(cp_dir, str(config_with_lowest_conf_dist)) + '\n')
+        for incumbent in incumbents:
+            if config_with_lowest_conf_dist == incumbent.config_id:
+                file.write(str(incumbent.get_dictionary()))
 
     wandb.finish()
 

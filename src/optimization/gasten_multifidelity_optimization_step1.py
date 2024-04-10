@@ -18,12 +18,19 @@ import math
 from src.utils import MetricsLogger, group_images
 from src.gan.train import train_disc, train_gen, loss_terms_to_str, evaluate
 from src.utils.checkpoint import checkpoint_gan
-from src.utils import load_z, set_seed, setup_reprod, create_checkpoint_path, gen_seed, seed_worker
+from src.utils import load_z, setup_reprod, create_checkpoint_path, seed_worker
 
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", dest="config_path",
                         required=True, help="Config file")
+    parser.add_argument('--pos', dest='pos_class', default=9,
+                        type=int, help='Positive class for binary classification')
+    parser.add_argument('--neg', dest='neg_class', default=4,
+                        type=int, help='Negative class for binary classification')
+    parser.add_argument('--dataset', dest='dataset',
+                        default='mnist', help='Dataset (mnist or fashion-mnist or cifar10)')
+    parser.add_argument('--fid-stats', dest='fid_stats')
     return parser.parse_args()
 
 
@@ -33,21 +40,22 @@ def main():
     config = read_config(args.config_path)
     device = torch.device(config["device"])
 
-    pos_class = None
-    neg_class = None
-    if "binary" in config["dataset"]:
-        pos_class = config["dataset"]["binary"]["pos"]
-        neg_class = config["dataset"]["binary"]["neg"]
+    if args.pos_class is not None and args.neg_class is not None:
+        pos_class = args.pos_class
+        neg_class = args.neg_class
+    else:
+        print('No positive and or negative class given!')
+        exit()
 
     dataset, num_classes, img_size = load_dataset(
-        config["dataset"]["name"], config["data-dir"], pos_class, neg_class)
+        args.dataset, config["data-dir"], pos_class, neg_class)
 
     n_disc_iters = config['train']['step-1']['disc-iters']
 
     test_noise, test_noise_conf = load_z(config['test-noise'])
     batch_size = config['train']['step-1']['batch-size']
 
-    fid_stats_mu, fid_stat_sigma = fid.load_statistics_from_path(config['fid-stats-path'])
+    fid_stats_mu, fid_stat_sigma = fid.load_statistics_from_path(args.fid_stats)
     fm_fn, dims = fid.get_inception_feature_map_fn(device)
     original_fid = fid.FID(
         fm_fn, dims, test_noise.size(0), fid_stats_mu, fid_stat_sigma, device=device)
@@ -195,7 +203,7 @@ def main():
     configspace = ConfigurationSpace()
     configspace.add_hyperparameters([G_lr, D_lr, G_beta1, D_beta1, G_beta2, D_beta2, n_blocks])
 
-    scenario = Scenario(configspace, deterministic=True, n_trials=224, min_budget=2, max_budget=10)
+    scenario = Scenario(configspace, deterministic=True, n_trials=1, min_budget=2, max_budget=10)
     intensifier = Hyperband(scenario, eta=2)
     smac = MultiFidelityFacade(scenario, train, intensifier=intensifier)
     incumbent = smac.optimize()

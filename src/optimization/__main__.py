@@ -2,15 +2,22 @@ import itertools
 import subprocess
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 import os
-from dotenv import load_dotenv
 from src.utils import create_and_store_z, gen_seed, set_seed
+from dotenv import load_dotenv
+from src.utils.config import read_config_clustering
+from src.clustering.generate_embeddings import generate_embeddings, load_gasten
+from src.clustering.optimize import hyper_tunning_clusters
+from src.clustering.prototypes import baseline_prototypes
+import json
 
 load_dotenv()
 parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
 parser.add_argument('--data-dir', dest='dataroot',
                     default=f"{os.environ['FILESDIR']}/data", help='Dir with dataset')
-parser.add_argument('--out-dir', dest='out_dir',
+parser.add_argument('--out-dir-models', dest='out_dir_models',
                     default=f"{os.environ['FILESDIR']}/models", help='Path to generated files')
+parser.add_argument('--out-dir-data', dest='out_dir_data',
+                    default=f"{os.environ['FILESDIR']}/data", help='Path to generated files')
 parser.add_argument('--dataset', dest='dataset',
                     default='mnist', help='Dataset (mnist or fashion-mnist or cifar10)')
 parser.add_argument('--n-classes', dest='n_classes',
@@ -34,8 +41,10 @@ parser.add_argument('--nf', type=str, default="1,2,4,8",
                     help='List of possible num features')
 parser.add_argument("--nz", dest="nz", default=2000, type=int)
 parser.add_argument("--z-dim", dest="z_dim", default=64, type=int)
-parser.add_argument("--config", dest="config_path", required=True, help="Config file")
+parser.add_argument("--config", dest="config_path_optim", required=True, help="Config file gasten")
+parser.add_argument("--config_clustering", dest="config_path_clustering", required=True, help="Config file clustering")
 parser.add_argument("--seed", type=int, default=None)
+
 
 def main():
     args = parser.parse_args()
@@ -45,36 +54,38 @@ def main():
     set_seed(seed)
 
     l_epochs = list(set([e
-                    for e in args.epochs.split(",") if e.isdigit()]))
+                         for e in args.epochs.split(",") if e.isdigit()]))
     l_clf_type = list(set([ct
                            for ct in args.clf_type.split(",")]))
     l_nf = list(set([nf
-                    for nf in args.nf.split(",") if nf.isdigit()]))
+                     for nf in args.nf.split(",") if nf.isdigit()]))
     l_epochs.sort()
     l_clf_type.sort()
     l_nf.sort()
 
     if args.pos_class is not None and args.neg_class is not None:
-        pos_class = args.pos_class
-        neg_class = args.neg_class
+        pos_class = str(args.pos_class)
+        neg_class = str(args.neg_class)
     else:
         print('No positive and or negative class given!')
         exit()
 
     print(f"\nGenerating FID score for {pos_class}v{neg_class} ...")
-    subprocess.run(['python', '-m', 'src.metrics.fid',
-                           '--data', args.dataroot,
-                           '--dataset', args.dataset,
-                           '--device', args.device,
-                           '--pos', str(pos_class), '--neg', str(neg_class)])
+    subprocess.run(['python3', '-m', 'src.metrics.fid',
+                    '--data', args.dataroot,
+                    '--dataset', args.dataset,
+                    '--device', args.device,
+                    '--pos', pos_class, '--neg', neg_class])
+
+    fid_stats_path = f"{os.environ['FILESDIR']}/data/fid-stats/stats.inception.{args.dataset}.{pos_class}v{neg_class}.npz"
 
     print(f"\nGenerating classifiers for {pos_class}v{neg_class} ...")
     for clf_type, nf, epochs in itertools.product(l_clf_type, l_nf, l_epochs):
         print("\n", clf_type, nf, epochs)
-        proc = subprocess.run(["python", "-m", "src.classifier.train",
+        proc = subprocess.run(["python3", "-m", "src.classifier.train",
                                "--device", args.device,
                                "--data-dir", args.dataroot,
-                               "--out-dir", args.out_dir,
+                               "--out-dir", args.out_dir_models,
                                "--dataset", args.dataset,
                                "--pos", pos_class,
                                "--neg", neg_class,
@@ -87,23 +98,51 @@ def main():
         for line in proc.stdout.split(b'\n')[-4:-1]:
             print(line.decode())
 
-
-    test_noise, test_noise_path = create_and_store_z(
-        args.out_dir, args.nz, args.z_dim,
+    create_and_store_z(
+        args.out_dir_data, args.nz, args.z_dim,
         config={'seed': seed, 'n_z': args.nz, 'z_dim': args.z_dim})
 
-    print("Generated test noise, stored in", test_noise_path)
-
-    print("Start hyperparameter optimization step-1")
     subprocess.run(['python', '-m', 'src.optimization.gasten_multifidelity_optimization_step1',
-                               '--config', args.config])
+                    '--config', args.config_path_optim, '--pos', pos_class, '--neg', neg_class,
+                    '--dataset', args.dataset, '--fid-stats', fid_stats_path])
 
+    classifiers = os.listdir(os.path.join(os.environ['FILESDIR'], 'models', f"{args.dataset}.{pos_class}v{neg_class}"))
+    classifier_paths = ",".join(
+        [f"{os.environ['FILESDIR']}/models/{args.dataset}.{pos_class}v{neg_class}/{classifier}" for classifier in
+         classifiers])
 
-    print("Start hyperparameter optimization step-2")
     subprocess.run(['python', '-m', 'src.optimization.gasten_multifidelity_optimization_step2',
-                               '--config', args.config])
+                    '--config', args.config_path_optim, '--classifiers', classifier_paths, '--pos', pos_class,
+                    '--neg', neg_class, '--dataset', args.dataset, '--fid-stats', fid_stats_path])
 
     print("Start clustering")
-    #https://github.com/inesgomes/gasten/blob/interpretability/src/clustering/__main__.py
+
+    with open('step-2-best-config.txt', 'r') as file:
+        lines = file.read().splitlines()
+        gan_path = lines[0]
+        best_config_optim = json.loads(lines[1].replace("'", '"'))
+
+    config_clustering = read_config_clustering(args.config_path_clustering)
+
+    config_clustering['dataset']['name'] = args.dataset
+    config_clustering['dataset']['binary']['pos'] = pos_class
+    config_clustering['dataset']['binary']['neg'] = neg_class
+    config_clustering['dir']['fid-stats'] = fid_stats_path
+    config_clustering['gasten']['gan_path'] = gan_path
+
+    netG, C, C_emb, classifier_name = load_gasten(config_clustering, best_config_optim['classifier'], best_config_optim)
+    # calculate baseline
+    baseline_prototypes(args.config_path_clustering, classifier_name, C, C_emb, 5, iter=0)
+
+    # generate images
+    syn_images_f, syn_embeddings_f = generate_embeddings(config_clustering, netG, C, C_emb, classifier_name)
+
+    # apply clustering
+    estimator, score, embeddings_reduced, clustering_result = hyper_tunning_clusters(config_clustering, classifier_name,
+                                                                                     'umap',
+                                                                                     'gmm',
+                                                                                     syn_embeddings_f)
+
+
 if __name__ == '__main__':
     main()

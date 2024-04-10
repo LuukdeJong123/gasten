@@ -1,22 +1,14 @@
-project: gasten_20241903_7v1_optim
-name: mnist-7v1_optim
+project: auto_gasten
+name: optim
 out-dir: out
 data-dir: data
 test-noise: data/z/z_2000_64
 fixed-noise: 2000
 
-device: cuda:0
+device: cpu
 num-workers: 0
 
-fid-stats-path: data/fid-stats/stats.inception.mnist.7v1.npz
-
 num-runs: 1
-
-dataset:
-  name: mnist
-  binary:
-    pos: 7
-    neg: 1
 
 model:
   z_dim: 64
