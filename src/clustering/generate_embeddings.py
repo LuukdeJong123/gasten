@@ -165,64 +165,11 @@ def generate_embeddings(config, netG, C, C_emb, classifier_name):
 
 if __name__ == "__main__":
     # setup
-    string1 = '''{
-    "project": "gasten_20231211",
-    "name": "mnist-7v1",
-    "tag": "v4",
-    "device": "cpu",
-    "batch-size": 64,
-    "checkpoint": "TRUE",
-    "compute-fid": "TRUE",
-    "dir": {
-        "data": "tools/data",
-        "clustering": "tools/data/clustering",
-        "fid-stats": "tools/data/fid-stats/stats.inception.mnist.8v9.npz"
-    },
-    "dataset": {
-        "name": "mnist",
-        "binary": {
-            "pos": "8",
-            "neg": "9"
-        }
-    },
-    "gasten": {
-        "epoch": {
-            "step-1": 5,
-            "step-2": 10
-        },
-        "gan_path": "tools/out/auto_gasten/optim/Apr10T13-50_21vgy91t/1"
-    },
-    "clustering": {
-        "z-dim": 64,
-        "fixed-noise": 15000,
-        "acd": 0.1,
-        "n-iter": 20,
-        "options": [
-            {
-                "dim-reduction": "umap",
-                "clustering": "gmm"
-            },
-            {
-                "dim-reduction": "umap",
-                "clustering": "hdbscan"
-            }
-        ]
-    },
-    "prototypes": {
-        "type": [
-            "medoid"
-        ]
-    }
-}'''
-    string2 = "{'classifier': 'tools/models/mnist.8v9/cnn-4-1.1298', 'd_beta1': 0.7436704297351775, 'd_beta2': 0.6424870384644795, 'd_lr': 0.0005903948646972072, 'g_beta1': 0.4812893194050143, 'g_beta2': 0.6813047017599905, 'g_lr': 0.0004938284901364233, 'n_blocks': 5, 'weight': 29}"
-    config = json.loads(string1)
-    best_config = json.loads(string2.replace("'", '"'))
-    load_gasten(config, best_config['classifier'], best_config)
-    # load_dotenv()
-    # args = parse_args()
-    # config = read_config_clustering(args.config)
-    # for classifier in config['gasten']['classifier']:
-    #     netG, C, C_emb, classifier_name = load_gasten(config, classifier)
-    #     images, _ = generate_embeddings(config, netG, C, C_emb, classifier_name)
-    #     if config["checkpoint"]:
-    #         save_gasten_images(config, C_emb, images, classifier_name)
+    load_dotenv()
+    args = parse_args()
+    config = read_config_clustering(args.config)
+    for classifier in config['gasten']['classifier']:
+        netG, C, C_emb, classifier_name = load_gasten(config, classifier)
+        images, _ = generate_embeddings(config, netG, C, C_emb, classifier_name)
+        if config["checkpoint"]:
+            save_gasten_images(config, C_emb, images, classifier_name)
