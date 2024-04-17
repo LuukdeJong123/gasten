@@ -75,20 +75,25 @@ def main():
 
     log_every_g_iter = 50
 
-    wandb.init(project=config['project'],
-               group=config['name'],
+    run_id = wandb.util.generate_id()
+    cp_dir = create_checkpoint_path(config, run_id)
+
+    wandb.init(project=config["project"],
+               group=config["name"],
                entity=os.environ['ENTITY'],
                job_type='step-1',
-               name=dataset_id)
+               name=f'{run_id}-step-1',
+               config={
+                   'id': run_id,
+                   'gan': config["model"],
+                   'train': config["train"]["step-1"],
+               })
 
     train_metrics = MetricsLogger(prefix='train')
     eval_metrics = MetricsLogger(prefix='eval')
 
     train_metrics.add('G_loss', iteration_metric=True)
     train_metrics.add('D_loss', iteration_metric=True)
-
-    run_id = wandb.util.generate_id()
-    cp_dir = create_checkpoint_path(config, run_id)
 
     def train(params: Configuration, seed: int, budget: int) -> float:
         setup_reprod(seed)
@@ -202,7 +207,7 @@ def main():
     configspace = ConfigurationSpace()
     configspace.add_hyperparameters([G_lr, D_lr, G_beta1, D_beta1, G_beta2, D_beta2, n_blocks])
 
-    scenario = Scenario(configspace, deterministic=True, n_trials=1, min_budget=2, max_budget=10)
+    scenario = Scenario(configspace, deterministic=True, n_trials=14, min_budget=2, max_budget=10)
     intensifier = Hyperband(scenario, eta=2)
     smac = MultiFidelityFacade(scenario, train, intensifier=intensifier)
     incumbent = smac.optimize()
