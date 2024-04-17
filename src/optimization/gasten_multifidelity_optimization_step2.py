@@ -107,10 +107,9 @@ def main():
         model_params, img_size, device=device)
 
     wandb.init(project=config['project'],
-               dir=os.environ['FILESDIR'],
                group=config['name'],
                entity=os.environ['ENTITY'],
-               job_type='step-2-optimization',
+               job_type='step-2',
                name=dataset_id)
 
     train_metrics = MetricsLogger(prefix='train')

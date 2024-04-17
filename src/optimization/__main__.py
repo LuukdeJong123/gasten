@@ -5,9 +5,8 @@ import os
 from src.utils import create_and_store_z, gen_seed, set_seed
 from dotenv import load_dotenv
 from src.utils.config import read_config_clustering
-from src.clustering.generate_embeddings import generate_embeddings, load_gasten
-from src.clustering.optimize import hyper_tunning_clusters
-from src.clustering.prototypes import baseline_prototypes
+from src.clustering.generate_embeddings import generate_embeddings, load_gasten, save_gasten_images
+from src.clustering.optimize import save_estimator, hyper_tunning_clusters
 import json
 
 load_dotenv()
@@ -45,6 +44,13 @@ parser.add_argument("--config", dest="config_path_optim", required=True, help="C
 parser.add_argument("--config_clustering", dest="config_path_clustering", required=True, help="Config file clustering")
 parser.add_argument("--seed", type=int, default=None)
 
+
+def save(config, C_emb, images, estimator, classifier_name, estimator_name):
+    """
+    """
+    print("> Save ...")
+    save_gasten_images(config, C_emb, images, classifier_name)
+    save_estimator(config, estimator, classifier_name, estimator_name)
 
 def main():
     args = parser.parse_args()
@@ -129,10 +135,11 @@ def main():
     config_clustering['dataset']['binary']['neg'] = neg_class
     config_clustering['dir']['fid-stats'] = fid_stats_path
     config_clustering['gasten']['gan_path'] = gan_path
+    config_clustering['gasten']['weight'] = best_config_optim['weight']
+    gan_path_splitted = gan_path.split('/')
+    config_clustering['gasten']['run-id'] = gan_path_splitted[len(gan_path_splitted)-2]
 
     netG, C, C_emb, classifier_name = load_gasten(config_clustering, best_config_optim['classifier'], best_config_optim)
-    # calculate baseline
-    baseline_prototypes(args.config_path_clustering, classifier_name, C, C_emb, 5, iter=0)
 
     # generate images
     syn_images_f, syn_embeddings_f = generate_embeddings(config_clustering, netG, C, C_emb, classifier_name)
@@ -142,6 +149,8 @@ def main():
                                                                                      'umap',
                                                                                      'gmm',
                                                                                      syn_embeddings_f)
+
+    save(config_clustering, C_emb, syn_images_f, estimator, classifier_name, 'auto_gasten')
 
 
 if __name__ == '__main__':

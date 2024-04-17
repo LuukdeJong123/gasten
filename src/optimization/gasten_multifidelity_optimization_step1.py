@@ -76,10 +76,9 @@ def main():
     log_every_g_iter = 50
 
     wandb.init(project=config['project'],
-               dir=os.environ['FILESDIR'],
                group=config['name'],
                entity=os.environ['ENTITY'],
-               job_type='step-1-optimization',
+               job_type='step-1',
                name=dataset_id)
 
     train_metrics = MetricsLogger(prefix='train')
