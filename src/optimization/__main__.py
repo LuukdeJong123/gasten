@@ -21,7 +21,7 @@ parser.add_argument('--dataset', dest='dataset',
                     default='mnist', help='Dataset (mnist or fashion-mnist or cifar10)')
 parser.add_argument('--n-classes', dest='n_classes',
                     default=10, help='Number of classes in dataset')
-parser.add_argument('--device', type=str, default='cpu',
+parser.add_argument('--device', type=str, default='cuda:0',
                     help='Device to use. Like cuda, cuda:0 or cpu')
 parser.add_argument('--batch-size', dest='batch_size',
                     type=int, default=64, help='Batch size')
@@ -138,6 +138,7 @@ def main():
     config_clustering['gasten']['weight'] = best_config_optim['weight']
     gan_path_splitted = gan_path.split('/')
     config_clustering['gasten']['run-id'] = gan_path_splitted[len(gan_path_splitted)-2]
+    config_clustering["project"] = f"{config_clustering['project']}-{pos_class}v{neg_class}"
 
     netG, C, C_emb, classifier_name = load_gasten(config_clustering, best_config_optim['classifier'], best_config_optim)
 

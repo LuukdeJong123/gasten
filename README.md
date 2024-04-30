@@ -6,7 +6,7 @@ Variation of GANs that, given a model, generates realistic data that is classiï¬
 
 Paper: [GASTeN: Generative Adversarial Stress Test Networks](https://link.springer.com/epdf/10.1007/978-3-031-30047-9_8?sharing_token=XGbq9zmVBDFAEaM4r1AAp_e4RwlQNchNByi7wbcMAY55SAL6inraGCkI72KOuzssTzewKWv51v_1pft7j7WJRbiAzL0vaTmG2vf4gs1QhnZ3lV72H7zSKLWQESXZjq5-1pg77WEnt2EHZaN2b51chvHsO6TW3tiGXSVhUgy87Ts%3D)
 
-## Create Virtual Environment
+## Create Virtual Environment and directories
 
 ```ssh
 mamba create -n gasten python=3.10
@@ -16,6 +16,12 @@ mamba activate gasten
 mamba install pip-tools
 
 pip3 install -r requirements.txt
+
+mkdir <file-directory>/data/clustering
+
+mkdir <file-directory>/data/fid-stats
+
+mkdir <file-directory>/out
 ```
 
 ## Run
@@ -25,7 +31,7 @@ pip3 install -r requirements.txt
 Create .env file with the following information
 ```yaml
 CUDA_VISIBLE_DEVICES=0
-FILESDIR=<file directory>
+FILESDIR=<file-directory>
 ENTITY=<wandb entity to track experiments>
 ```
 

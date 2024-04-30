@@ -1,5 +1,5 @@
-project: gasten_20231211
-name: mnist-7v1
+project: auto_gasten
+name: clustering
 tag: v4
 device: cuda:0
 batch-size: 64
