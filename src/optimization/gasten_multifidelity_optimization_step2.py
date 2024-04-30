@@ -74,8 +74,6 @@ def main():
     original_fid = fid.FID(
         fm_fn, dims, test_noise.size(0), mu, sigma, device=device)
 
-    dataset_id = datetime.now().strftime("%b%dT%H-%M")
-
     fixed_noise = torch.randn(
         config['fixed-noise'], config["model"]["z_dim"], device=device)
 
@@ -108,6 +106,7 @@ def main():
 
     run_id = wandb.util.generate_id()
     cp_dir = create_checkpoint_path(config, run_id)
+    config["project"] = f"{config['project']}-{pos_class}v{neg_class}"
 
     wandb.init(project=config["project"],
                group=config["name"],

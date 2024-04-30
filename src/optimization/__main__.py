@@ -16,7 +16,7 @@ parser.add_argument('--data-dir', dest='dataroot',
 parser.add_argument('--out-dir-models', dest='out_dir_models',
                     default=f"{os.environ['FILESDIR']}/models", help='Path to generated files')
 parser.add_argument('--out-dir-data', dest='out_dir_data',
-                    default=f"{os.environ['FILESDIR']}/data", help='Path to generated files')
+                    default=f"{os.environ['FILESDIR']}/data/z", help='Path to generated files')
 parser.add_argument('--dataset', dest='dataset',
                     default='mnist', help='Dataset (mnist or fashion-mnist or cifar10)')
 parser.add_argument('--n-classes', dest='n_classes',
@@ -45,11 +45,11 @@ parser.add_argument("--config_clustering", dest="config_path_clustering", requir
 parser.add_argument("--seed", type=int, default=None)
 
 
-def save(config, C_emb, images, estimator, classifier_name, estimator_name):
+def save(config, C_emb, images, estimator, classifier_name, estimator_name, clustering_result):
     """
     """
     print("> Save ...")
-    save_gasten_images(config, C_emb, images, classifier_name)
+    save_gasten_images(config, C_emb, images, classifier_name, clustering_result)
     save_estimator(config, estimator, classifier_name, estimator_name)
 
 def main():
@@ -150,7 +150,7 @@ def main():
                                                                                      'gmm',
                                                                                      syn_embeddings_f)
 
-    save(config_clustering, C_emb, syn_images_f, estimator, classifier_name, 'auto_gasten')
+    save(config_clustering, C_emb, syn_images_f, estimator, classifier_name, 'auto_gasten', clustering_result)
 
 
 if __name__ == '__main__':

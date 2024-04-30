@@ -37,7 +37,7 @@ def read_config_clustering(path):
     with open(path, 'r') as file:
         config = yaml.safe_load(file)
         # add paths
-        for rel_path in ['data', 'fid-stats', 'clustering']:
+        for rel_path in ['data', 'clustering']:
             config['dir'][rel_path] = os.environ['FILESDIR'] + '/' + config['dir'][rel_path]
         if "classifier" in config['gasten']:
             config['gasten']['classifier'] = [(os.environ['FILESDIR'] + '/' + rel_path) for rel_path in config['gasten']['classifier']]

@@ -81,10 +81,10 @@ CONFIG_SCHEMA_CLUSTERING = Schema({
     "batch-size": int,
     "checkpoint": bool,
     "compute-fid": bool,
-    "dir": {
+    Optional("dir"): {
         "data": os.path.exists,
         "clustering": os.path.exists,
-        "fid-stats": os.path.exists,
+        Optional("fid-stats"): str,
     },
     Optional("dataset"): {
         "name": And(str, valid_dataset),

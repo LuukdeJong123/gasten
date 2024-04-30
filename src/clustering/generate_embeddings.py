@@ -29,7 +29,6 @@ def load_gasten(config, classifier, best_config_optim):
             gasten_config = json.load(config_file)
 
         model_params = gasten_config['model']
-        print(model_params)
 
         gen_cp = torch.load(os.path.join(
             gan_path, 'generator.pth'), map_location=device)
@@ -59,7 +58,7 @@ def load_gasten(config, classifier, best_config_optim):
     return netG, C, C_emb, classifier_name
 
 
-def save_gasten_images(config, classifier, images, classifier_name):
+def save_gasten_images(config, classifier, images, classifier_name, clustering_result):
     """
     save embeddings and images for next step
     """
@@ -67,6 +66,7 @@ def save_gasten_images(config, classifier, images, classifier_name):
     torch.save(classifier, f"{path}/classifier_embeddings.pt")
     thr = int(config['clustering']['acd']*10)
     torch.save(images, f"{path}/images_acd_{thr}.pt")
+    torch.save(clustering_result, f"{path}/clustering_result_{thr}.pt")
 
 
 def generate_embeddings(config, netG, C, C_emb, classifier_name):

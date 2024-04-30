@@ -9,7 +9,6 @@ compute-fid: True
 dir:
   data: data
   clustering: data/clustering
-  fid-stats: data/fid-stats/stats.inception.mnist.7v1.npz
 
 dataset:
   name: mnist
