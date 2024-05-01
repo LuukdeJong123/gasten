@@ -73,9 +73,9 @@ def main():
 
     log_every_g_iter = 50
 
+    config["project"] = f"{config['project']}-{pos_class}v{neg_class}"
     run_id = wandb.util.generate_id()
     cp_dir = create_checkpoint_path(config, run_id)
-    config["project"] = f"{config['project']}-{pos_class}v{neg_class}"
 
     wandb.init(project=config["project"],
                group=config["name"],

@@ -104,9 +104,9 @@ def main():
     G, D = construct_gan(
         model_params, img_size, device=device)
 
+    config["project"] = f"{config['project']}-{pos_class}v{neg_class}"
     run_id = wandb.util.generate_id()
     cp_dir = create_checkpoint_path(config, run_id)
-    config["project"] = f"{config['project']}-{pos_class}v{neg_class}"
 
     wandb.init(project=config["project"],
                group=config["name"],

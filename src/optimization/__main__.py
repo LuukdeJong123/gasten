@@ -8,6 +8,7 @@ from src.utils.config import read_config_clustering
 from src.clustering.generate_embeddings import generate_embeddings, load_gasten, save_gasten_images
 from src.clustering.optimize import save_estimator, hyper_tunning_clusters
 import json
+import torch
 
 load_dotenv()
 parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
@@ -108,7 +109,7 @@ def main():
         args.out_dir_data, args.nz, args.z_dim,
         config={'seed': seed, 'n_z': args.nz, 'z_dim': args.z_dim})
 
-    subprocess.run(['python', '-m', 'src.optimization.gasten_multifidelity_optimization_step1',
+    subprocess.run(['python3', '-m', 'src.optimization.gasten_multifidelity_optimization_step1',
                     '--config', args.config_path_optim, '--pos', pos_class, '--neg', neg_class,
                     '--dataset', args.dataset, '--fid-stats', fid_stats_path])
 
@@ -117,7 +118,7 @@ def main():
         [f"{os.environ['FILESDIR']}/models/{args.dataset}.{pos_class}v{neg_class}/{classifier}" for classifier in
          classifiers])
 
-    subprocess.run(['python', '-m', 'src.optimization.gasten_multifidelity_optimization_step2',
+    subprocess.run(['python3', '-m', 'src.optimization.gasten_multifidelity_optimization_step2',
                     '--config', args.config_path_optim, '--classifiers', classifier_paths, '--pos', pos_class,
                     '--neg', neg_class, '--dataset', args.dataset, '--fid-stats', fid_stats_path])
 
