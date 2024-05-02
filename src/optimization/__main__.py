@@ -2,6 +2,8 @@ import itertools
 import subprocess
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 import os
+
+import wandb
 from src.utils import create_and_store_z, gen_seed, set_seed
 from dotenv import load_dotenv
 from src.utils.config import read_config_clustering
@@ -9,6 +11,7 @@ from src.clustering.generate_embeddings import generate_embeddings, load_gasten,
 from src.clustering.optimize import save_estimator, hyper_tunning_clusters
 import json
 import torch
+import numpy as np
 
 load_dotenv()
 parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
@@ -22,7 +25,7 @@ parser.add_argument('--dataset', dest='dataset',
                     default='mnist', help='Dataset (mnist or fashion-mnist or cifar10)')
 parser.add_argument('--n-classes', dest='n_classes',
                     default=10, help='Number of classes in dataset')
-parser.add_argument('--device', type=str, default='cuda:0',
+parser.add_argument('--device', type=str, default='cpu',
                     help='Device to use. Like cuda, cuda:0 or cpu')
 parser.add_argument('--batch-size', dest='batch_size',
                     type=int, default=64, help='Batch size')
@@ -46,12 +49,31 @@ parser.add_argument("--config_clustering", dest="config_path_clustering", requir
 parser.add_argument("--seed", type=int, default=None)
 
 
-def save(config, C_emb, images, estimator, classifier_name, estimator_name, clustering_result):
+def save(config, C_emb, images, estimator, classifier_name, estimator_name, clustering_result, C):
     """
     """
     print("> Save ...")
-    save_gasten_images(config, C_emb, images, classifier_name, clustering_result)
+    save_gasten_images(config, C_emb, images, classifier_name, clustering_result, C)
     save_estimator(config, estimator, classifier_name, estimator_name)
+
+def log_cluster(images, clustering_results, cluster_num):
+    cluster = []
+    for i in range(len(clustering_results)):
+        if clustering_results[i] == cluster_num:
+            cluster.append(images[i])
+    cluster = np.array(cluster)
+    mnist_data_reshaped = cluster.reshape(-1, 28, 28)
+
+    num_images_to_plot = min(300, len(cluster))
+    images_per_row = 15
+    images_per_column = num_images_to_plot // images_per_row
+
+    combined_image = np.zeros((28 * images_per_column, 28 * images_per_row))
+    for i in range(images_per_column):
+        for j in range(images_per_row):
+            if i * images_per_row + j < num_images_to_plot:
+                combined_image[i * 28: (i + 1) * 28, j * 28: (j + 1) * 28] = mnist_data_reshaped[i * images_per_row + j]
+    wandb.Image(combined_image, caption=f"cluster_{cluster_num}")
 
 def main():
     args = parser.parse_args()
@@ -152,7 +174,21 @@ def main():
                                                                                      'gmm',
                                                                                      syn_embeddings_f)
 
-    save(config_clustering, C_emb, syn_images_f, estimator, classifier_name, 'auto_gasten', clustering_result)
+    save(config_clustering, C_emb, syn_images_f, estimator, classifier_name, 'auto_gasten', clustering_result, C)
+
+    wandb.init(project=config_clustering['project'],
+                dir=os.environ['FILESDIR'],
+                group=config_clustering['name'],
+                entity=os.environ['ENTITY'],
+                job_type='cluster_results',
+                name="cluster_results")
+
+
+    unique_clusters = set(clustering_result)
+    for cluster_num in unique_clusters:
+        log_cluster(syn_images_f, clustering_result, cluster_num)
+
+    wandb.finish()
 
 
 if __name__ == '__main__':

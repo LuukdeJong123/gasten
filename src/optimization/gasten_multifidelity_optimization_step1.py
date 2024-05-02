@@ -6,7 +6,6 @@ import argparse
 from dotenv import load_dotenv
 import wandb
 import os
-from datetime import datetime
 from smac.intensifier.hyperband import Hyperband
 
 from src.utils.config import read_config

@@ -58,7 +58,7 @@ def load_gasten(config, classifier, best_config_optim):
     return netG, C, C_emb, classifier_name
 
 
-def save_gasten_images(config, classifier, images, classifier_name, clustering_result):
+def save_gasten_images(config, classifier, images, classifier_name, clustering_result, C):
     """
     save embeddings and images for next step
     """
@@ -67,7 +67,7 @@ def save_gasten_images(config, classifier, images, classifier_name, clustering_r
     thr = int(config['clustering']['acd']*10)
     torch.save(images, f"{path}/images_acd_{thr}.pt")
     torch.save(clustering_result, f"{path}/clustering_result_{thr}.pt")
-
+    torch.save(C, f"{path}/classifier_{thr}.pt")
 
 def generate_embeddings(config, netG, C, C_emb, classifier_name):
 

@@ -6,7 +6,6 @@ import argparse
 from dotenv import load_dotenv
 import wandb
 import os
-from datetime import datetime
 from smac.multi_objective.parego import ParEGO
 from typing import Dict
 
