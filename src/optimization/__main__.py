@@ -56,11 +56,14 @@ def save(config, C_emb, images, estimator, classifier_name, estimator_name, clus
     save_gasten_images(config, C_emb, images, classifier_name, clustering_result, C)
     save_estimator(config, estimator, classifier_name, estimator_name)
 
+
 def log_cluster(images, clustering_results, cluster_num):
     cluster = []
     for i in range(len(clustering_results)):
         if clustering_results[i] == cluster_num:
-            cluster.append(images[i])
+            image_cpu = images[i].cpu()
+            cluster.append(image_cpu)
+
     cluster = np.array(cluster)
     mnist_data_reshaped = cluster.reshape(-1, 28, 28)
 
@@ -73,7 +76,8 @@ def log_cluster(images, clustering_results, cluster_num):
         for j in range(images_per_row):
             if i * images_per_row + j < num_images_to_plot:
                 combined_image[i * 28: (i + 1) * 28, j * 28: (j + 1) * 28] = mnist_data_reshaped[i * images_per_row + j]
-    wandb.Image(combined_image, caption=f"cluster_{cluster_num}")
+    wandb.log({"clusters": wandb.Image(combined_image, caption=f"cluster_{cluster_num}")})
+
 
 def main():
     args = parser.parse_args()
@@ -160,7 +164,7 @@ def main():
     config_clustering['gasten']['gan_path'] = gan_path
     config_clustering['gasten']['weight'] = best_config_optim['weight']
     gan_path_splitted = gan_path.split('/')
-    config_clustering['gasten']['run-id'] = gan_path_splitted[len(gan_path_splitted)-2]
+    config_clustering['gasten']['run-id'] = gan_path_splitted[len(gan_path_splitted) - 2]
     config_clustering["project"] = f"{config_clustering['project']}-{pos_class}v{neg_class}"
 
     netG, C, C_emb, classifier_name = load_gasten(config_clustering, best_config_optim['classifier'], best_config_optim)
@@ -177,12 +181,11 @@ def main():
     save(config_clustering, C_emb, syn_images_f, estimator, classifier_name, 'auto_gasten', clustering_result, C)
 
     wandb.init(project=config_clustering['project'],
-                dir=os.environ['FILESDIR'],
-                group=config_clustering['name'],
-                entity=os.environ['ENTITY'],
-                job_type='cluster_results',
-                name="cluster_results")
-
+               dir=os.environ['FILESDIR'],
+               group=config_clustering['name'],
+               entity=os.environ['ENTITY'],
+               job_type='cluster_results',
+               name="cluster_results")
 
     unique_clusters = set(clustering_result)
     for cluster_num in unique_clusters:
