@@ -150,7 +150,7 @@ def main():
 
     print("Start clustering")
 
-    with open('step-2-best-config.txt', 'r') as file:
+    with open(f'step-2-best-config-{pos_class}v{neg_class}.txt', 'r') as file:
         lines = file.read().splitlines()
         gan_path = lines[0]
         best_config_optim = json.loads(lines[1].replace("'", '"'))
