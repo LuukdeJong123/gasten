@@ -11,6 +11,7 @@ from src.utils import create_and_store_z, gen_seed, set_seed
 from dotenv import load_dotenv
 from src.utils.config import read_config_clustering
 from src.clustering.generate_embeddings import load_gasten
+from src.utils.config import read_config
 
 load_dotenv()
 parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
@@ -49,15 +50,14 @@ parser.add_argument("--seed", type=int, default=None)
 
 
 def save(config, images):
-    """
-    """
     print("> Save ...")
     """
-    save embeddings and images for next step
+    save images 
     """
-    path = os.path.join(config['dir']['clustering'], config['project'])
-    thr = int(config['clustering']['acd']*10)
-    torch.save(images, f"{path}/images_acd_{thr}.pt")
+    path = os.path.join(config['out-dir'],
+                        config['project'],
+                        config['name'], 'images')
+    torch.save(images, f"{path}/images.pt")
 
 
 def main():
@@ -136,6 +136,7 @@ def main():
         gan_path = lines[0]
         best_config_optim = json.loads(lines[1].replace("'", '"'))
 
+    config_optim = read_config(args.config_path)
     config_clustering = read_config_clustering(args.config_path_clustering)
 
     config_clustering['dataset']['name'] = args.dataset
@@ -207,7 +208,7 @@ def main():
         syn_images_f = torch.cat([syn_images_f, filtered_images], dim=0)
 
     #Save
-    save(config_clustering, syn_images_f)
+    save(config_optim, syn_images_f)
 
 
 if __name__ == '__main__':
