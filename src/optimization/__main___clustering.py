@@ -2,15 +2,16 @@ import itertools
 import subprocess
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 import os
-from tqdm import tqdm
-from torch.utils.data import TensorDataset, DataLoader
-import json
-import torch
 
+import wandb
 from src.utils import create_and_store_z, gen_seed, set_seed
 from dotenv import load_dotenv
 from src.utils.config import read_config_clustering
-from src.clustering.generate_embeddings import load_gasten
+from src.clustering.generate_embeddings import generate_embeddings, load_gasten, save_gasten_images
+from src.clustering.optimize import save_estimator, hyper_tunning_clusters
+import json
+import torch
+import numpy as np
 
 load_dotenv()
 parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
@@ -48,16 +49,40 @@ parser.add_argument("--config_clustering", dest="config_path_clustering", requir
 parser.add_argument("--seed", type=int, default=None)
 
 
-def save(config, images):
+def save(config, C_emb, images, estimator, classifier_name, estimator_name, clustering_result, C):
     """
     """
     print("> Save ...")
-    """
-    save embeddings and images for next step
-    """
-    path = os.path.join(config['dir']['clustering'], config['project'])
-    thr = int(config['clustering']['acd']*10)
-    torch.save(images, f"{path}/images_acd_{thr}.pt")
+    save_gasten_images(config, C_emb, images, classifier_name, clustering_result, C)
+    save_estimator(config, estimator, classifier_name, estimator_name)
+
+
+def log_cluster(images, clustering_results, cluster_num):
+    cluster = []
+    for i in range(len(clustering_results)):
+        if clustering_results[i] == cluster_num:
+            image_cpu = images[i].cpu()
+            cluster.append(image_cpu)
+
+    # Convert the cluster list to a NumPy array
+    cluster = np.array(cluster)
+
+    # Determine the number of images to plot (up to 300)
+    num_images_to_plot = min(300, len(cluster))
+
+    # Create a combined image by arranging the images in a grid
+    images_per_row = 15
+    images_per_column = num_images_to_plot // images_per_row
+    combined_image = np.zeros((28 * images_per_column, 28 * images_per_row))
+
+    for i in range(images_per_column):
+        for j in range(images_per_row):
+            if i * images_per_row + j < num_images_to_plot:
+                combined_image[i * 28: (i + 1) * 28, j * 28: (j + 1) * 28] = cluster[i * images_per_row + j]
+
+    # Log the combined image using wandb
+    wandb.log({"clusters": wandb.Image(combined_image, caption=f"cluster_{cluster_num}")})
+
 
 
 def main():
@@ -150,64 +175,29 @@ def main():
 
     netG, C, C_emb, classifier_name = load_gasten(config_clustering, best_config_optim['classifier'], best_config_optim)
 
-    device = config_clustering["device"]
-    batch_size = config_clustering['batch-size']
+    # generate images
+    syn_images_f, syn_embeddings_f = generate_embeddings(config_clustering, netG, C, C_emb, classifier_name)
 
-    config_run = {
-        'step': 'image_generation',
-        'classifier_name': classifier_name,
-        'gasten': {
-            'epoch1': config_clustering['gasten']['epoch']['step-1'],
-            'epoch2': config_clustering['gasten']['epoch']['step-2'],
-            'weight': config_clustering['gasten']['weight']
-        },
-        'probabilities': {
-            'min': 0.5 - config_clustering['clustering']['acd'],
-            'max': 0.5 + config_clustering['clustering']['acd']
-        },
-        'generated_images': config_clustering['clustering']['fixed-noise']
-    }
+    # apply clustering
+    estimator, score, embeddings_reduced, clustering_result = hyper_tunning_clusters(config_clustering, classifier_name,
+                                                                                     'umap',
+                                                                                     'gmm',
+                                                                                     syn_embeddings_f)
 
-    # Assuming you have config_run, config_clustering, device, netG, batch_size, and C defined earlier
+    save(config_clustering, C_emb, syn_images_f, estimator, classifier_name, 'auto_gasten', clustering_result, C)
 
-    # Initialize variables
-    images_array = []
-    syn_images_f = torch.empty(0)  # Initialize empty tensor
+    wandb.init(project=config_clustering['project'],
+               dir=os.environ['FILESDIR'],
+               group=config_clustering['name'],
+               entity=os.environ['ENTITY'],
+               job_type='cluster_results',
+               name="cluster_results")
 
-    # Loop until syn_images_f has around 1000 images
-    while len(syn_images_f) < 1000:
-        # create fake images
-        test_noise = torch.randn(config_run['generated_images'], config_clustering["clustering"]["z-dim"],
-                                 device=device)
-        noise_loader = DataLoader(TensorDataset(test_noise), batch_size=batch_size, shuffle=False)
+    unique_clusters = set(clustering_result)
+    for cluster_num in unique_clusters:
+        log_cluster(syn_images_f, clustering_result, cluster_num)
 
-        # Clear images_array before populating with new batch
-        images_array.clear()
-
-        for idx, batch in enumerate(tqdm(noise_loader, desc='Evaluating fake images')):
-            # generate images
-            with torch.no_grad():
-                netG.eval()
-                batch_images = netG(*batch)
-
-            images_array.append(batch_images)
-
-        # Concatenate batches into a single array
-        images = torch.cat(images_array, dim=0)
-
-        # apply classifier to fake images
-        with torch.no_grad():
-            pred = C(images).cpu().detach().numpy()
-
-        # filter images so that ACD < threshold
-        mask = (pred >= config_run['probabilities']['min']) & (pred <= config_run['probabilities']['max'])
-        filtered_images = images[mask]
-
-        # Concatenate the filtered images to syn_images_f
-        syn_images_f = torch.cat([syn_images_f, filtered_images], dim=0)
-
-    #Save
-    save(config_clustering, syn_images_f)
+    wandb.finish()
 
 
 if __name__ == '__main__':
