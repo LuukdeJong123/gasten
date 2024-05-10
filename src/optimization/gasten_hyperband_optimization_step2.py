@@ -38,7 +38,6 @@ def parse_args():
                         type=int, help='Negative class for binary classification')
     parser.add_argument('--dataset', dest='dataset',
                         default='mnist', help='Dataset (mnist or fashion-mnist or cifar10)')
-    parser.add_argument('--fid-stats', dest='fid_stats')
     return parser.parse_args()
 
 
@@ -66,7 +65,9 @@ def main():
     test_noise, test_noise_conf = load_z(config['test-noise'])
     batch_size = config['train']['step-2']['batch-size']
 
-    mu, sigma = fid.load_statistics_from_path(args.fid_stats)
+    fid_stats_path = f"{os.environ['FILESDIR']}/data/fid-stats/stats.inception.{args.dataset}.{pos_class}v{neg_class}.npz"
+
+    mu, sigma = fid.load_statistics_from_path(fid_stats_path)
     fm_fn, dims = fid.get_inception_feature_map_fn(device)
     original_fid = fid.FID(
         fm_fn, dims, test_noise.size(0), mu, sigma, device=device)

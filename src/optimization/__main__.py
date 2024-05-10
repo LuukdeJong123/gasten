@@ -25,7 +25,7 @@ parser.add_argument('--dataset', dest='dataset',
                     default='mnist', help='Dataset (mnist or fashion-mnist or cifar10)')
 parser.add_argument('--n-classes', dest='n_classes',
                     default=10, help='Number of classes in dataset')
-parser.add_argument('--device', type=str, default='cpu',
+parser.add_argument('--device', type=str, default='cuda:0',
                     help='Device to use. Like cuda, cuda:0 or cpu')
 parser.add_argument('--batch-size', dest='batch_size',
                     type=int, default=64, help='Batch size')
@@ -56,7 +56,7 @@ def save(config, images):
     """
     path = os.path.join(config['out-dir'],
                         config['project'],
-                        config['name'], 'images')
+                        config['name'])
     torch.save(images, f"{path}/images.pt")
 
 
@@ -84,59 +84,59 @@ def main():
         print('No positive and or negative class given!')
         exit()
 
-    print(f"\nGenerating FID score for {pos_class}v{neg_class} ...")
-    subprocess.run(['python3', '-m', 'src.metrics.fid',
-                    '--data', args.dataroot,
-                    '--dataset', args.dataset,
-                    '--device', args.device,
-                    '--pos', pos_class, '--neg', neg_class])
+    # print(f"\nGenerating FID score for {pos_class}v{neg_class} ...")
+    # subprocess.run(['python3', '-m', 'src.metrics.fid',
+    #                 '--data', args.dataroot,
+    #                 '--dataset', args.dataset,
+    #                 '--device', args.device,
+    #                 '--pos', pos_class, '--neg', neg_class])
 
     fid_stats_path = f"{os.environ['FILESDIR']}/data/fid-stats/stats.inception.{args.dataset}.{pos_class}v{neg_class}.npz"
 
-    print(f"\nGenerating classifiers for {pos_class}v{neg_class} ...")
-    for clf_type, nf, epochs in itertools.product(l_clf_type, l_nf, l_epochs):
-        print("\n", clf_type, nf, epochs)
-        proc = subprocess.run(["python3", "-m", "src.classifier.train",
-                               "--device", args.device,
-                               "--data-dir", args.dataroot,
-                               "--out-dir", args.out_dir_models,
-                               "--dataset", args.dataset,
-                               "--pos", pos_class,
-                               "--neg", neg_class,
-                               "--classifier-type", clf_type,
-                               "--nf", nf,
-                               "--epochs", epochs,
-                               "--batch-size", str(args.batch_size),
-                               "--lr", str(args.lr)],
-                              capture_output=True)
-        for line in proc.stdout.split(b'\n')[-4:-1]:
-            print(line.decode())
+    # print(f"\nGenerating classifiers for {pos_class}v{neg_class} ...")
+    # for clf_type, nf, epochs in itertools.product(l_clf_type, l_nf, l_epochs):
+    #     print("\n", clf_type, nf, epochs)
+    #     proc = subprocess.run(["python3", "-m", "src.classifier.train",
+    #                            "--device", args.device,
+    #                            "--data-dir", args.dataroot,
+    #                            "--out-dir", args.out_dir_models,
+    #                            "--dataset", args.dataset,
+    #                            "--pos", pos_class,
+    #                            "--neg", neg_class,
+    #                            "--classifier-type", clf_type,
+    #                            "--nf", nf,
+    #                            "--epochs", epochs,
+    #                            "--batch-size", str(args.batch_size),
+    #                            "--lr", str(args.lr)],
+    #                           capture_output=True)
+    #     for line in proc.stdout.split(b'\n')[-4:-1]:
+    #         print(line.decode())
+    #
+    # create_and_store_z(
+    #     args.out_dir_data, args.nz, args.z_dim,
+    #     config={'seed': seed, 'n_z': args.nz, 'z_dim': args.z_dim})
+    #
+    # subprocess.run(['python3', '-m', 'src.optimization.gasten_multifidelity_optimization_step1',
+    #                 '--config', args.config_path_optim, '--pos', pos_class, '--neg', neg_class,
+    #                 '--dataset', args.dataset, '--fid-stats', fid_stats_path])
+    #
+    # classifiers = os.listdir(os.path.join(os.environ['FILESDIR'], 'models', f"{args.dataset}.{pos_class}v{neg_class}"))
+    # classifier_paths = ",".join(
+    #     [f"{os.environ['FILESDIR']}/models/{args.dataset}.{pos_class}v{neg_class}/{classifier}" for classifier in
+    #      classifiers])
+    #
+    # subprocess.run(['python3', '-m', 'src.optimization.gasten_multifidelity_optimization_step2',
+    #                 '--config', args.config_path_optim, '--classifiers', classifier_paths, '--pos', pos_class,
+    #                 '--neg', neg_class, '--dataset', args.dataset, '--fid-stats', fid_stats_path])
 
-    create_and_store_z(
-        args.out_dir_data, args.nz, args.z_dim,
-        config={'seed': seed, 'n_z': args.nz, 'z_dim': args.z_dim})
-
-    subprocess.run(['python3', '-m', 'src.optimization.gasten_multifidelity_optimization_step1',
-                    '--config', args.config_path_optim, '--pos', pos_class, '--neg', neg_class,
-                    '--dataset', args.dataset, '--fid-stats', fid_stats_path])
-
-    classifiers = os.listdir(os.path.join(os.environ['FILESDIR'], 'models', f"{args.dataset}.{pos_class}v{neg_class}"))
-    classifier_paths = ",".join(
-        [f"{os.environ['FILESDIR']}/models/{args.dataset}.{pos_class}v{neg_class}/{classifier}" for classifier in
-         classifiers])
-
-    subprocess.run(['python3', '-m', 'src.optimization.gasten_multifidelity_optimization_step2',
-                    '--config', args.config_path_optim, '--classifiers', classifier_paths, '--pos', pos_class,
-                    '--neg', neg_class, '--dataset', args.dataset, '--fid-stats', fid_stats_path])
-
-    print("Start clustering")
 
     with open(f'step-2-best-config-{pos_class}v{neg_class}.txt', 'r') as file:
         lines = file.read().splitlines()
         gan_path = lines[0]
         best_config_optim = json.loads(lines[1].replace("'", '"'))
 
-    config_optim = read_config(args.config_path)
+    config_optim = read_config(args.config_path_optim)
+    config_optim["project"] = f"{config_optim['project']}-{pos_class}v{neg_class}"
     config_clustering = read_config_clustering(args.config_path_clustering)
 
     config_clustering['dataset']['name'] = args.dataset
@@ -205,7 +205,7 @@ def main():
         filtered_images = images[mask]
 
         # Concatenate the filtered images to syn_images_f
-        syn_images_f = torch.cat([syn_images_f, filtered_images], dim=0)
+        syn_images_f = torch.cat([syn_images_f.to(device), filtered_images.to(device)], dim=0)
 
     #Save
     save(config_optim, syn_images_f)
