@@ -214,7 +214,12 @@ def main():
     incumbent = smac.optimize()
 
     best_config = incumbent.get_dictionary()
+
+    with open(f'{os.environ["FILESDIR"]}/step-1-best-config-bayesian-{pos_class}v{neg_class}.txt', 'w') as file:
+        file.write(os.path.join(cp_dir, str(incumbent.config_id)))
+
     print("Best Configuration:", best_config)
+    print("Best Configuration id:", incumbent.config_id)
 
     wandb.finish()
 

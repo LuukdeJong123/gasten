@@ -115,7 +115,7 @@ def main():
                     G, D, g_opt, d_opt, train_state,
                     {"eval": eval_metrics.stats, "train": train_metrics.stats}, config,
                     output_dir=config_checkpoint_dir)
-                with open(f'step-1-best-random-search-config-{pos_class}v{neg_class}.txt', 'w') as file:
+                with open(f'{os.environ["FILESDIR"]}/step-1-best-random-search-config-{pos_class}v{neg_class}.txt', 'w') as file:
                     file.write(os.path.join(cp_dir))
 
             param_scores[i] = current_score

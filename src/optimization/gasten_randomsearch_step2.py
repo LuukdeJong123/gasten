@@ -77,7 +77,7 @@ def main():
 
     log_every_g_iter = 50
 
-    with open(f'step-1-best-config--random-search-{pos_class}v{neg_class}.txt', 'r') as file:
+    with open(f'{os.environ["FILESDIR"]}/step-1-best-config-random-search-{pos_class}v{neg_class}.txt', 'r') as file:
         gan_path = file.read()
 
     if not os.path.exists(gan_path):
@@ -100,7 +100,6 @@ def main():
 
     config["project"] = f"{config['project']}-{pos_class}v{neg_class}"
     run_id = wandb.util.generate_id()
-    cp_dir = create_checkpoint_path(config, run_id)
 
     wandb.init(project=config["project"],
                group=config["name"],
@@ -130,16 +129,6 @@ def main():
 
             # Replace this part with your model training and evaluation
             current_score, G, D, g_opt, d_opt, train_state = evaluate_model_with_params(params)
-
-            if current_score > best_score:
-                best_score = current_score
-                config_checkpoint_dir = os.path.join(cp_dir, 'best-grid-search-config')
-                checkpoint_gan(
-                    G, D, g_opt, d_opt, train_state,
-                    {"eval": eval_metrics.stats, "train": train_metrics.stats}, config,
-                    output_dir=config_checkpoint_dir)
-                with open(f'step-1-best-grid-search-config-{pos_class}v{neg_class}.txt', 'w') as file:
-                    file.write(os.path.join(cp_dir))
 
             param_scores[i] = current_score
 

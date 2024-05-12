@@ -81,7 +81,7 @@ def main():
 
     log_every_g_iter = 50
 
-    with open(f'step-1-best-config-hyperband-{pos_class}v{neg_class}.txt', 'r') as file:
+    with open(f'{os.environ["FILESDIR"]}/step-1-best-config-hyperband-{pos_class}v{neg_class}.txt', 'r') as file:
         gan_path = file.read()
 
     if not os.path.exists(gan_path):
@@ -268,8 +268,6 @@ def main():
     for incumbent in incumbents:
         print("Best Configuration:", incumbent.get_dictionary())
         print("Configuration id:", incumbent.config_id)
-
-
 
     wandb.finish()
 

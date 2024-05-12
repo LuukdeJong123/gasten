@@ -77,7 +77,7 @@ def main():
 
     log_every_g_iter = 50
 
-    with open(f'step-1-best-grid-search-config-{pos_class}v{neg_class}.txt', 'r') as file:
+    with open(f'{os.environ["FILESDIR"]}/step-1-best-grid-search-config-{pos_class}v{neg_class}.txt', 'r') as file:
         gan_path = file.read()
 
     if not os.path.exists(gan_path):
