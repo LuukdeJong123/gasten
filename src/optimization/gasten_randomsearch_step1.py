@@ -120,7 +120,7 @@ def main():
 
             param_scores[i] = current_score
 
-        torch.save(param_scores, f"grid_search/param_scores_gridsearch_step1.pt")
+        torch.save(param_scores, f"{os.environ['FILESDIR']}/random_search_scores/param_scores_random_search_step1.pt")
         return best_params
 
     # Example function to evaluate model with given parameters
@@ -229,7 +229,7 @@ def main():
         'n_blocks': randint(low=2, high=6),  # Discrete uniform distribution between 2 and 5
     }
 
-    best_params = random_search(param_distributions, num_iterations=100)
+    best_params = random_search(param_distributions, num_iterations=10)
     print("Best Hyperparameters:", best_params)
 
 

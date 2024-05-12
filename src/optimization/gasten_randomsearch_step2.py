@@ -143,7 +143,7 @@ def main():
 
             param_scores[i] = current_score
 
-        torch.save(param_scores, f"grid_search/param_scores_gridsearch_step1.pt")
+        torch.save(param_scores, f"{os.environ['FILESDIR']}/random_search_scores/param_scores_random_search_step2.pt")
         return best_params
 
     # Example function to evaluate model with given parameters
