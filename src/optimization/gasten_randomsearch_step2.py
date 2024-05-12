@@ -201,7 +201,8 @@ def main():
         g_iters_per_epoch = int(math.floor(len(dataloader) / n_disc_iters))
         iters_per_epoch = g_iters_per_epoch * n_disc_iters
 
-        for epoch in range(1, 41):
+        epochs = 41
+        for epoch in range(1, epochs):
             data_iter = iter(dataloader)
             curr_g_iter = 0
 
@@ -255,7 +256,7 @@ def main():
                      test_noise, device, None)
 
             eval_metrics.finalize_epoch()
-        return (eval_metrics.stats['fid'][40], eval_metrics.stats['conf_dist'][40]), G, D, g_opt, d_opt, train_state
+        return (eval_metrics.stats['fid'][epochs-1], eval_metrics.stats['conf_dist'][epochs-1]), G, D, g_opt, d_opt, train_state
 
     param_distributions = {
         'g_lr': uniform(loc=0.0001, scale=0.001),  # Uniform distribution between 0.0001 and 0.001
