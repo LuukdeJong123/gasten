@@ -48,9 +48,9 @@ def main():
         exit()
 
     classifiers = os.listdir(os.path.join(os.environ['FILESDIR'], 'models', f"{args.dataset}.{pos_class}v{neg_class}"))
-    classifier_paths = ",".join(
-        [f"{os.environ['FILESDIR']}/models/{args.dataset}.{pos_class}v{neg_class}/{classifier}" for classifier in
-         classifiers])
+    classifier_paths = [f"{os.environ['FILESDIR']}/models/{args.dataset}.{pos_class}v{neg_class}/{classifier}"
+                        for classifier in classifiers]
+
 
     dataset, num_classes, img_size = load_dataset(
         args.dataset, config["data-dir"], pos_class, neg_class)
@@ -190,7 +190,7 @@ def main():
         iters_per_epoch = g_iters_per_epoch * n_disc_iters
 
         epochs = 41
-        for epoch in range(1, 2):
+        for epoch in range(1, epochs):
             data_iter = iter(dataloader)
             curr_g_iter = 0
 
@@ -220,7 +220,7 @@ def main():
                     if curr_g_iter % log_every_g_iter == 0 or \
                             curr_g_iter == g_iters_per_epoch:
                         print('[%d/%d][%d/%d]\tG loss: %.4f %s; D loss: %.4f %s'
-                              % (epoch, epochs-1, curr_g_iter, g_iters_per_epoch, g_loss.item(),
+                              % (epoch, epochs - 1, curr_g_iter, g_iters_per_epoch, g_loss.item(),
                                  loss_terms_to_str(g_loss_terms), d_loss.item(),
                                  loss_terms_to_str(d_loss_terms)))
 
@@ -244,7 +244,7 @@ def main():
                      test_noise, device, None)
 
             eval_metrics.finalize_epoch()
-        return (eval_metrics.stats['fid'][0], eval_metrics.stats['conf_dist'][0]), G, D, g_opt, d_opt, train_state
+        return (eval_metrics.stats['fid'][epochs-2], eval_metrics.stats['conf_dist'][epochs-2]), G, D, g_opt, d_opt, train_state
 
     param_distributions = {
         'g_lr': uniform(loc=0.0001, scale=0.001),  # Uniform distribution between 0.0001 and 0.001
@@ -257,7 +257,7 @@ def main():
         'classifier': classifier_paths
     }
 
-    random_search(param_distributions, num_iterations=1)
+    random_search(param_distributions, num_iterations=10)
 
 
 if __name__ == '__main__':

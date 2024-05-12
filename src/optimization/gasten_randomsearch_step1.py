@@ -112,7 +112,7 @@ def main():
                     {"eval": eval_metrics.stats, "train": train_metrics.stats}, config,
                     output_dir=config_checkpoint_dir)
                 with open(f'{os.environ["FILESDIR"]}/step-1-best-random-search-config-{pos_class}v{neg_class}.txt', 'w') as file:
-                    file.write(os.path.join(cp_dir))
+                    file.write(os.path.join(config_checkpoint_dir))
 
             param_scores[i] = current_score
 
@@ -156,7 +156,7 @@ def main():
         iters_per_epoch = g_iters_per_epoch * n_disc_iters
 
         epochs = 11
-        for epoch in range(1, 2):
+        for epoch in range(1, epochs):
             data_iter = iter(dataloader)
             curr_g_iter = 0
 
@@ -212,7 +212,7 @@ def main():
                      test_noise, device, None)
 
             eval_metrics.finalize_epoch()
-        return eval_metrics.stats['fid'][0], G, D, g_opt, d_opt, train_state
+        return eval_metrics.stats['fid'][epochs-2], G, D, g_opt, d_opt, train_state
 
     param_distributions = {
         'g_lr': uniform(loc=0.0001, scale=0.001),  # Uniform distribution between 0.0001 and 0.001
@@ -224,7 +224,7 @@ def main():
         'n_blocks': randint(low=2, high=6),  # Discrete uniform distribution between 2 and 5
     }
 
-    random_search(param_distributions, num_iterations=1)
+    random_search(param_distributions, num_iterations=10)
 
 if __name__ == '__main__':
     main()

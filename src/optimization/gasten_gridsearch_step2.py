@@ -48,9 +48,8 @@ def main():
         exit()
 
     classifiers = os.listdir(os.path.join(os.environ['FILESDIR'], 'models', f"{args.dataset}.{pos_class}v{neg_class}"))
-    classifier_paths = ",".join(
-        [f"{os.environ['FILESDIR']}/models/{args.dataset}.{pos_class}v{neg_class}/{classifier}" for classifier in
-         classifiers])
+    classifier_paths = [f"{os.environ['FILESDIR']}/models/{args.dataset}.{pos_class}v{neg_class}/{classifier}"
+                        for classifier in classifiers]
 
     dataset, num_classes, img_size = load_dataset(
         args.dataset, config["data-dir"], pos_class, neg_class)
