@@ -146,8 +146,8 @@ def main():
 
         g_iters_per_epoch = int(math.floor(len(dataloader) / n_disc_iters))
         iters_per_epoch = g_iters_per_epoch * n_disc_iters
-
-        for epoch in range(1, 11):
+        epochs = 11
+        for epoch in range(1, epochs):
             data_iter = iter(dataloader)
             curr_g_iter = 0
 
@@ -203,7 +203,7 @@ def main():
                      test_noise, device, None)
 
             eval_metrics.finalize_epoch()
-            current_score = eval_metrics.stats['fid'][0]
+            current_score = eval_metrics.stats['fid'][epochs-1]
 
         # Check if the current set of hyperparameters is the best
         if current_score > best_score:
