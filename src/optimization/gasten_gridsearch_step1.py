@@ -177,7 +177,7 @@ def main():
                     if curr_g_iter % log_every_g_iter == 0 or \
                             curr_g_iter == g_iters_per_epoch:
                         print('[%d/%d][%d/%d]\tG loss: %.4f %s; D loss: %.4f %s'
-                              % (epoch, 10, curr_g_iter, g_iters_per_epoch, g_loss.item(),
+                              % (epoch, epochs-1, curr_g_iter, g_iters_per_epoch, g_loss.item(),
                                  loss_terms_to_str(g_loss_terms), d_loss.item(),
                                  loss_terms_to_str(d_loss_terms)))
 

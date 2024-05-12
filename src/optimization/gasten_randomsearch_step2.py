@@ -3,11 +3,9 @@ from torch.optim import Adam
 import argparse
 from dotenv import load_dotenv
 import wandb
-import math
 import os
-import random
 from scipy.stats import uniform, randint
-import json
+import random
 
 from src.metrics import fid, LossSecondTerm
 from src.gan.update_g import UpdateGeneratorGASTEN
@@ -20,8 +18,7 @@ import math
 from src.utils import MetricsLogger, group_images
 from src.gan.train import train_disc, train_gen, loss_terms_to_str, evaluate
 import json
-from src.utils import load_z, setup_reprod, create_checkpoint_path, seed_worker
-from src.utils.checkpoint import checkpoint_gan
+from src.utils import load_z, seed_worker
 
 
 def parse_args():
@@ -51,6 +48,10 @@ def main():
         exit()
 
     classifiers = os.listdir(os.path.join(os.environ['FILESDIR'], 'models', f"{args.dataset}.{pos_class}v{neg_class}"))
+    classifier_paths = ",".join(
+        [f"{os.environ['FILESDIR']}/models/{args.dataset}.{pos_class}v{neg_class}/{classifier}" for classifier in
+         classifiers])
+
     dataset, num_classes, img_size = load_dataset(
         args.dataset, config["data-dir"], pos_class, neg_class)
 
@@ -77,7 +78,7 @@ def main():
 
     log_every_g_iter = 50
 
-    with open(f'{os.environ["FILESDIR"]}/step-1-best-config-random-search-{pos_class}v{neg_class}.txt', 'r') as file:
+    with open(f'{os.environ["FILESDIR"]}/step-1-best-random-search-config-{pos_class}v{neg_class}.txt', 'r') as file:
         gan_path = file.read()
 
     if not os.path.exists(gan_path):
@@ -119,13 +120,12 @@ def main():
     train_metrics.add('D_loss', iteration_metric=True)
 
     def random_search(param_distributions, num_iterations):
-        best_score = float('-inf')
-        best_params = None
-
         param_scores = {}
 
         for i in range(num_iterations):
-            params = {param: distribution.rvs() for param, distribution in param_distributions.items()}
+            params = {
+                param: distribution.rvs() if param != 'classifier' else random.choice(param_distributions['classifier'])
+                for param, distribution in param_distributions.items()}
 
             # Replace this part with your model training and evaluation
             current_score, G, D, g_opt, d_opt, train_state = evaluate_model_with_params(params)
@@ -133,7 +133,6 @@ def main():
             param_scores[i] = current_score
 
         torch.save(param_scores, f"{os.environ['FILESDIR']}/random_search_scores/param_scores_random_search_step2.pt")
-        return best_params
 
     # Example function to evaluate model with given parameters
     def evaluate_model_with_params(params):
@@ -171,7 +170,7 @@ def main():
 
         g_crit, d_crit = construct_loss(config_from_path["model"]["loss"], D)
 
-        g_updater = UpdateGeneratorGASTEN(g_crit, C, alpha=params['weight'])
+        g_updater = UpdateGeneratorGASTEN(g_crit, C, alpha=params['weights'])
 
         for loss_term in g_updater.get_loss_terms():
             train_metrics.add(loss_term, iteration_metric=True)
@@ -191,7 +190,7 @@ def main():
         iters_per_epoch = g_iters_per_epoch * n_disc_iters
 
         epochs = 41
-        for epoch in range(1, epochs):
+        for epoch in range(1, 2):
             data_iter = iter(dataloader)
             curr_g_iter = 0
 
@@ -221,7 +220,7 @@ def main():
                     if curr_g_iter % log_every_g_iter == 0 or \
                             curr_g_iter == g_iters_per_epoch:
                         print('[%d/%d][%d/%d]\tG loss: %.4f %s; D loss: %.4f %s'
-                              % (epoch, 40, curr_g_iter, g_iters_per_epoch, g_loss.item(),
+                              % (epoch, epochs-1, curr_g_iter, g_iters_per_epoch, g_loss.item(),
                                  loss_terms_to_str(g_loss_terms), d_loss.item(),
                                  loss_terms_to_str(d_loss_terms)))
 
@@ -245,7 +244,7 @@ def main():
                      test_noise, device, None)
 
             eval_metrics.finalize_epoch()
-        return (eval_metrics.stats['fid'][epochs-1], eval_metrics.stats['conf_dist'][epochs-1]), G, D, g_opt, d_opt, train_state
+        return (eval_metrics.stats['fid'][0], eval_metrics.stats['conf_dist'][0]), G, D, g_opt, d_opt, train_state
 
     param_distributions = {
         'g_lr': uniform(loc=0.0001, scale=0.001),  # Uniform distribution between 0.0001 and 0.001
@@ -255,11 +254,10 @@ def main():
         'g_beta2': uniform(loc=0.1, scale=0.8),  # Uniform distribution between 0.1 and 0.9
         'd_beta2': uniform(loc=0.1, scale=0.8),  # Uniform distribution between 0.1 and 0.9
         'weights': randint(low=1, high=30),
-        'classifier': classifiers
+        'classifier': classifier_paths
     }
 
-    best_params = random_search(param_distributions, num_iterations=10)
-    print("Best Hyperparameters:", best_params)
+    random_search(param_distributions, num_iterations=1)
 
 
 if __name__ == '__main__':

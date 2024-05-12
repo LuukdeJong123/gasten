@@ -1,13 +1,10 @@
 import torch
 from torch.optim import Adam
-from sklearn.model_selection import ParameterGrid
-from tqdm import tqdm
 import argparse
 from dotenv import load_dotenv
 import wandb
 import math
 import os
-import random
 from scipy.stats import uniform, randint
 
 from src.utils.config import read_config
@@ -100,7 +97,6 @@ def main():
 
     def random_search(param_distributions, num_iterations):
         best_score = float('-inf')
-        best_params = None
 
         for _ in range(num_iterations):
             params = {param: distribution.rvs() for param, distribution in param_distributions.items()}
@@ -121,7 +117,6 @@ def main():
             param_scores[i] = current_score
 
         torch.save(param_scores, f"{os.environ['FILESDIR']}/random_search_scores/param_scores_random_search_step1.pt")
-        return best_params
 
     # Example function to evaluate model with given parameters
     def evaluate_model_with_params(params):
@@ -161,7 +156,7 @@ def main():
         iters_per_epoch = g_iters_per_epoch * n_disc_iters
 
         epochs = 11
-        for epoch in range(1, epochs):
+        for epoch in range(1, 2):
             data_iter = iter(dataloader)
             curr_g_iter = 0
 
@@ -191,7 +186,7 @@ def main():
                     if curr_g_iter % log_every_g_iter == 0 or \
                             curr_g_iter == g_iters_per_epoch:
                         print('[%d/%d][%d/%d]\tG loss: %.4f %s; D loss: %.4f %s'
-                              % (epoch, 10, curr_g_iter, g_iters_per_epoch, g_loss.item(),
+                              % (epoch, epochs-1, curr_g_iter, g_iters_per_epoch, g_loss.item(),
                                  loss_terms_to_str(g_loss_terms), d_loss.item(),
                                  loss_terms_to_str(d_loss_terms)))
 
@@ -217,7 +212,7 @@ def main():
                      test_noise, device, None)
 
             eval_metrics.finalize_epoch()
-        return eval_metrics.stats['fid'][epochs-1], G, D, g_opt, d_opt, train_state
+        return eval_metrics.stats['fid'][0], G, D, g_opt, d_opt, train_state
 
     param_distributions = {
         'g_lr': uniform(loc=0.0001, scale=0.001),  # Uniform distribution between 0.0001 and 0.001
@@ -229,9 +224,7 @@ def main():
         'n_blocks': randint(low=2, high=6),  # Discrete uniform distribution between 2 and 5
     }
 
-    best_params = random_search(param_distributions, num_iterations=10)
-    print("Best Hyperparameters:", best_params)
-
+    random_search(param_distributions, num_iterations=1)
 
 if __name__ == '__main__':
     main()

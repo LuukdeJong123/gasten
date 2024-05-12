@@ -5,9 +5,7 @@ from tqdm import tqdm
 import argparse
 from dotenv import load_dotenv
 import wandb
-import math
 import os
-import json
 
 from src.metrics import fid, LossSecondTerm
 from src.gan.update_g import UpdateGeneratorGASTEN
@@ -50,6 +48,9 @@ def main():
         exit()
 
     classifiers = os.listdir(os.path.join(os.environ['FILESDIR'], 'models', f"{args.dataset}.{pos_class}v{neg_class}"))
+    classifier_paths = ",".join(
+        [f"{os.environ['FILESDIR']}/models/{args.dataset}.{pos_class}v{neg_class}/{classifier}" for classifier in
+         classifiers])
 
     dataset, num_classes, img_size = load_dataset(
         args.dataset, config["data-dir"], pos_class, neg_class)
@@ -127,7 +128,7 @@ def main():
         'g_beta2': [0.1, 0.5, 0.9],
         'd_beta2': [0.1, 0.5, 0.9],
         'weights': [1, 15, 30],
-        'classifiers':  classifiers
+        'classifiers':  classifier_paths
     }
 
     # Training loop with grid search for hyperparameter optimization
@@ -190,7 +191,8 @@ def main():
         g_iters_per_epoch = int(math.floor(len(dataloader) / n_disc_iters))
         iters_per_epoch = g_iters_per_epoch * n_disc_iters
 
-        for epoch in range(1, 41):
+        epochs = 41
+        for epoch in range(1, epochs):
             data_iter = iter(dataloader)
             curr_g_iter = 0
 
@@ -220,7 +222,7 @@ def main():
                     if curr_g_iter % log_every_g_iter == 0 or \
                             curr_g_iter == g_iters_per_epoch:
                         print('[%d/%d][%d/%d]\tG loss: %.4f %s; D loss: %.4f %s'
-                              % (epoch, 40, curr_g_iter, g_iters_per_epoch, g_loss.item(),
+                              % (epoch, epochs-1, curr_g_iter, g_iters_per_epoch, g_loss.item(),
                                  loss_terms_to_str(g_loss_terms), d_loss.item(),
                                  loss_terms_to_str(d_loss_terms)))
 
