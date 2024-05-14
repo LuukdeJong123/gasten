@@ -123,7 +123,7 @@ def main():
     train_metrics.add('G_loss', iteration_metric=True)
     train_metrics.add('D_loss', iteration_metric=True)
 
-    def train(params: Configuration, seed: int = 42) -> float:
+    def train(params: Configuration, seed: int = 42) -> Dict[str, float]:
         setup_reprod(seed)
 
         C, C_params, C_stats, C_args = construct_classifier_from_checkpoint(
@@ -179,7 +179,8 @@ def main():
         g_iters_per_epoch = int(math.floor(len(dataloader) / n_disc_iters))
         iters_per_epoch = g_iters_per_epoch * n_disc_iters
 
-        for epoch in range(1, 41):
+        epochs = 41
+        for epoch in range(1, epochs):
             data_iter = iter(dataloader)
             curr_g_iter = 0
 
@@ -209,7 +210,7 @@ def main():
                     if curr_g_iter % log_every_g_iter == 0 or \
                             curr_g_iter == g_iters_per_epoch:
                         print('[%d/%d][%d/%d]\tG loss: %.4f %s; D loss: %.4f %s'
-                              % (epoch, 40, curr_g_iter, g_iters_per_epoch, g_loss.item(),
+                              % (epoch, epochs-1, curr_g_iter, g_iters_per_epoch, g_loss.item(),
                                  loss_terms_to_str(g_loss_terms), d_loss.item(),
                                  loss_terms_to_str(d_loss_terms)))
 
@@ -236,8 +237,13 @@ def main():
 
         config_checkpoint_dir = os.path.join(cp_dir, str(params.config_id))
         checkpoint_gan(
-            G, D, g_opt, d_opt, train_state,
-            {"eval": eval_metrics.stats, "train": train_metrics.stats}, config, output_dir=config_checkpoint_dir)
+                G, D, g_opt, d_opt, train_state,
+                {"eval": eval_metrics.stats, "train": train_metrics.stats}, config, output_dir=config_checkpoint_dir)
+
+        return {
+            "fid": eval_metrics.stats['fid'][epochs - 2],
+            "confusion_distance": eval_metrics.stats['conf_dist'][epochs - 2],
+        }
 
     G_lr = Float("g_lr", (1e-4, 1e-3), default=0.0002)
     D_lr = Float("d_lr", (1e-4, 1e-3), default=0.0002)
@@ -253,13 +259,15 @@ def main():
 
     objectives = ["fid", "confusion_distance"]
 
-    scenario = Scenario(configspace, objectives=objectives, deterministic=True, n_trials=1)
+    scenario = Scenario(configspace, objectives=objectives, deterministic=True, n_trials=10)
     multi_objective_algorithm = ParEGO(scenario)
-    smac = HyperparameterOptimizationFacade(scenario, train, multi_objective_algorithm=multi_objective_algorithm)
-    incumbent = smac.optimize()
+    smac = HyperparameterOptimizationFacade(scenario, train, multi_objective_algorithm=multi_objective_algorithm, overwrite=True)
+    incumbents = smac.optimize()
 
-    best_config = incumbent.get_dictionary()
-    print("Best Configuration:", best_config)
+    print("Configs from the Pareto front (incumbents):")
+    for incumbent in incumbents:
+        print("Best Configuration:", incumbent.get_dictionary())
+        print("Configuration id:", incumbent.config_id)
 
     wandb.finish()
 

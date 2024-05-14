@@ -262,7 +262,7 @@ def main():
     scenario = Scenario(configspace, objectives=objectives, deterministic=True, n_trials=22, min_budget=2,
                         max_budget=40)
     multi_objective_algorithm = ParEGO(scenario)
-    smac = MultiFidelityFacade(scenario, train, multi_objective_algorithm=multi_objective_algorithm)
+    smac = MultiFidelityFacade(scenario, train, multi_objective_algorithm=multi_objective_algorithm, overwrite=True)
     incumbents = smac.optimize()
 
     print("Configs from the Pareto front (incumbents):")

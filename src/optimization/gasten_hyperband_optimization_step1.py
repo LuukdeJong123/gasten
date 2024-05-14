@@ -208,7 +208,7 @@ def main():
 
     scenario = Scenario(configspace, deterministic=True, n_trials=14, min_budget=2, max_budget=10)
     intensifier = Hyperband(scenario, eta=2)
-    smac = HyperbandFacade(scenario, train, intensifier=intensifier)
+    smac = HyperbandFacade(scenario, train, intensifier=intensifier, overwrite=True)
     incumbent = smac.optimize()
     best_config = incumbent.get_dictionary()
 

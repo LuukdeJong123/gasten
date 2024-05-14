@@ -133,7 +133,8 @@ def main():
         g_iters_per_epoch = int(math.floor(len(dataloader) / n_disc_iters))
         iters_per_epoch = g_iters_per_epoch * n_disc_iters
 
-        for epoch in range(1, 11):
+        epochs = 11
+        for epoch in range(1, epochs):
             data_iter = iter(dataloader)
             curr_g_iter = 0
 
@@ -163,7 +164,7 @@ def main():
                     if curr_g_iter % log_every_g_iter == 0 or \
                             curr_g_iter == g_iters_per_epoch:
                         print('[%d/%d][%d/%d]\tG loss: %.4f %s; D loss: %.4f %s'
-                              % (epoch, 10, curr_g_iter, g_iters_per_epoch, g_loss.item(),
+                              % (epoch, epochs-1, curr_g_iter, g_iters_per_epoch, g_loss.item(),
                                  loss_terms_to_str(g_loss_terms), d_loss.item(),
                                  loss_terms_to_str(d_loss_terms)))
 
@@ -195,7 +196,7 @@ def main():
             G, D, g_opt, d_opt, train_state,
             {"eval": eval_metrics.stats, "train": train_metrics.stats}, config, output_dir=config_checkpoint_dir)
 
-        return eval_metrics.stats['fid'][10]
+        return eval_metrics.stats['fid'][epochs-2]
 
     G_lr = Float("g_lr", (1e-4, 1e-3), default=0.0002)
     D_lr = Float("d_lr", (1e-4, 1e-3), default=0.0002)
@@ -208,9 +209,9 @@ def main():
     configspace = ConfigurationSpace()
     configspace.add_hyperparameters([G_lr, D_lr, G_beta1, D_beta1, G_beta2, D_beta2, n_blocks])
 
-    scenario = Scenario(configspace, deterministic=True, n_trials=1)
+    scenario = Scenario(configspace, deterministic=True, n_trials=10)
 
-    smac = HyperparameterOptimizationFacade(scenario, train)
+    smac = HyperparameterOptimizationFacade(scenario, train, overwrite=True)
     incumbent = smac.optimize()
 
     best_config = incumbent.get_dictionary()

@@ -1,4 +1,4 @@
-project: hyperband
+project: bayesian
 name: optimization
 out-dir: out
 data-dir: data
