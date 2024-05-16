@@ -119,7 +119,7 @@ def main():
     train_metrics.add('G_loss', iteration_metric=True)
     train_metrics.add('D_loss', iteration_metric=True)
 
-    def random_search(param_distributions, num_iterations):
+    def random_search(param_distributions, num_iterations, name):
         param_scores = {}
 
         for i in range(num_iterations):
@@ -132,7 +132,7 @@ def main():
 
             param_scores[i] = current_score
 
-        torch.save(param_scores, f"{os.environ['FILESDIR']}/random_search_scores/param_scores_random_search_step2.pt")
+        torch.save(param_scores, f"{os.environ['FILESDIR']}/random_search_scores/param_scores_random_search_step2_{name}.pt")
 
     # Example function to evaluate model with given parameters
     def evaluate_model_with_params(params):
@@ -257,7 +257,7 @@ def main():
         'classifier': classifier_paths
     }
 
-    random_search(param_distributions, num_iterations=10)
+    random_search(param_distributions, num_iterations=10, name=f"{pos_class}v{neg_class}")
 
 
 if __name__ == '__main__':

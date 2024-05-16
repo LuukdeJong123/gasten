@@ -95,7 +95,7 @@ def main():
     i = 0
     param_scores = {}
 
-    def random_search(param_distributions, num_iterations):
+    def random_search(param_distributions, num_iterations, name):
         best_score = float('-inf')
 
         for _ in range(num_iterations):
@@ -116,7 +116,7 @@ def main():
 
             param_scores[i] = current_score
 
-        torch.save(param_scores, f"{os.environ['FILESDIR']}/random_search_scores/param_scores_random_search_step1.pt")
+        torch.save(param_scores, f"{os.environ['FILESDIR']}/random_search_scores/param_scores_random_search_step1_{name}.pt")
 
     # Example function to evaluate model with given parameters
     def evaluate_model_with_params(params):
@@ -224,7 +224,7 @@ def main():
         'n_blocks': randint(low=1, high=5),  # Discrete uniform distribution between 1 and 5
     }
 
-    random_search(param_distributions, num_iterations=10)
+    random_search(param_distributions, num_iterations=10, name=f"{pos_class}v{neg_class}")
 
 if __name__ == '__main__':
     main()

@@ -217,6 +217,6 @@ def main():
 
         param_scores[i] = current_score
 
-    torch.save(param_scores, f"{os.environ['FILESDIR']}/grid_search_scores/param_scores_grid_search_step2.pt")
+    torch.save(param_scores, f"{os.environ['FILESDIR']}/grid_search_scores/param_scores_grid_search_step1_{pos_class}v{neg_class}.pt")
 if __name__ == '__main__':
     main()
