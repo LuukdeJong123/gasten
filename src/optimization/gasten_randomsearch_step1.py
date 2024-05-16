@@ -221,7 +221,7 @@ def main():
         'd_beta1': uniform(loc=0.1, scale=0.8),  # Uniform distribution between 0.1 and 0.9
         'g_beta2': uniform(loc=0.1, scale=0.8),  # Uniform distribution between 0.1 and 0.9
         'd_beta2': uniform(loc=0.1, scale=0.8),  # Uniform distribution between 0.1 and 0.9
-        'n_blocks': randint(low=2, high=6),  # Discrete uniform distribution between 2 and 5
+        'n_blocks': randint(low=1, high=5),  # Discrete uniform distribution between 1 and 5
     }
 
     random_search(param_distributions, num_iterations=10)
