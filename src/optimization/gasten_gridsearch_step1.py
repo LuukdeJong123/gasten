@@ -204,7 +204,7 @@ def main():
 
             eval_metrics.finalize_epoch()
             current_score = eval_metrics.stats['fid'][epochs-1]
-            param_scores[epoch] = current_score
+            param_scores[epoch-1] = current_score
 
         # Check if the current set of hyperparameters is the best
         if current_score > best_score:
@@ -217,6 +217,6 @@ def main():
                 file.write(os.path.join(config_checkpoint_dir))
 
 
-    torch.save(param_scores, f"{os.environ['FILESDIR']}/grid_search_scores/param_scores_grid_search_step1_{pos_class}v{neg_class}.pt")
+        torch.save(param_scores, f"{os.environ['FILESDIR']}/grid_search_scores/param_scores_grid_search_step2_{pos_class}v{neg_class}_iteration{iteration}.pt")
 if __name__ == '__main__':
     main()

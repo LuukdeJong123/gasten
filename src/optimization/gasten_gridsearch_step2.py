@@ -131,11 +131,11 @@ def main():
     }
 
     # Training loop with grid search for hyperparameter optimization
-    i = 0
+    iteration = 0
     param_scores = {}
 
     for params in tqdm(list(ParameterGrid(param_grid))):
-        i += 1
+        iteration += 1
         current_score = (float('-inf'), float('-inf'))
         C, C_params, C_stats, C_args = construct_classifier_from_checkpoint(
             params['classifier'], device=device)
@@ -154,12 +154,6 @@ def main():
 
         g_opt = Adam(G.parameters(), lr=params['g_lr'], betas=(params['g_beta1'], params['g_beta2']))
         d_opt = Adam(D.parameters(), lr=params['d_lr'], betas=(params['d_beta1'], params['d_beta2']))
-
-        train_state = {
-            'epoch': 0,
-            'best_epoch': 0,
-            'best_epoch_metric': float('inf'),
-        }
 
         G.load_state_dict(gen_cp['state'])
         D.load_state_dict(dis_cp['state'])
@@ -246,9 +240,9 @@ def main():
 
             eval_metrics.finalize_epoch()
             current_score = (eval_metrics.stats['fid'][epoch-1], eval_metrics.stats['conf_dist'][epoch-1])
-        param_scores[epoch] = current_score
+            param_scores[epoch-1] = current_score
 
-    torch.save(param_scores, f"{os.environ['FILESDIR']}/grid_search_scores/param_scores_grid_search_step2_{pos_class}v{neg_class}.pt")
+        torch.save(param_scores, f"{os.environ['FILESDIR']}/grid_search_scores/param_scores_grid_search_step2_{pos_class}v{neg_class}_iteration{iteration}.pt")
 
 if __name__ == '__main__':
     main()
