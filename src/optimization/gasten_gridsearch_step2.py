@@ -120,13 +120,13 @@ def main():
 
     # Define hyperparameters and their possible values
     param_grid = {
-        'g_lr': [0.001],
-        'd_lr': [0.001],
-        'g_beta1': [0.1],
-        'd_beta1': [0.1],
-        'g_beta2': [0.1],
-        'd_beta2': [0.1],
-        'weight': [1],
+        'g_lr': [0.001, 0.0002, 0.0001],
+        'd_lr': [0.001, 0.0002, 0.0001],
+        'g_beta1': [0.1, 0.5, 0.9],
+        'd_beta1': [0.1, 0.5, 0.9],
+        'g_beta2': [0.1, 0.5, 0.9],
+        'd_beta2': [0.1, 0.5, 0.9],
+        'weight': [1, 15, 30],
         'classifier':  classifier_paths
     }
 

@@ -95,13 +95,13 @@ def main():
     # Define hyperparameters and their possible values
 
     param_grid = {
-        'g_lr': [0.001],
-        'd_lr': [0.001],
-        'g_beta1': [0.1],
-        'd_beta1': [0.1],
-        'g_beta2': [0.1],
-        'd_beta2': [0.1],
-        'n_blocks': [3]
+        'g_lr': [0.001, 0.0002, 0.0001],
+        'd_lr': [0.001, 0.0002, 0.0001],
+        'g_beta1': [0.1, 0.5, 0.9],
+        'd_beta1': [0.1, 0.5, 0.9],
+        'g_beta2': [0.1, 0.5, 0.9],
+        'd_beta2': [0.1, 0.5, 0.9],
+        'n_blocks': [3, 4, 5]
     }
 
     # Training loop with grid search for hyperparameter optimization
