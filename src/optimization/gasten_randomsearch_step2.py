@@ -236,7 +236,7 @@ def main():
             eval_metrics.stats['fid'][epoch - 1], eval_metrics.stats['conf_dist'][epoch - 1])
 
         torch.save(param_scores,
-                   f"{os.environ['FILESDIR']}/random_search_scores/param_scores_random_search_step2_{name}_config{iteration}.pt")
+                   f"{os.environ['FILESDIR']}/random_search_scores/param_scores_random_search_step2_{name}_iteration_{iteration}.pt")
 
     param_distributions = {
         'g_lr': uniform(loc=0.0001, scale=0.001),  # Uniform distribution between 0.0001 and 0.001

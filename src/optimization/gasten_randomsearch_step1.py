@@ -208,7 +208,7 @@ def main():
             eval_metrics.finalize_epoch()
             param_scores[epoch-1] = eval_metrics.stats['fid'][epoch-1]
 
-        torch.save(param_scores, f"{os.environ['FILESDIR']}/random_search_scores/param_scores_random_search_step1_{name}_config{iteration}.pt")
+        torch.save(param_scores, f"{os.environ['FILESDIR']}/random_search_scores/param_scores_random_search_step1_{name}_iteration_{iteration}.pt")
 
         return eval_metrics.stats['fid'][epochs-2], G, D, g_opt, d_opt, train_state
 
