@@ -112,7 +112,7 @@ def main():
                     file.write(os.path.join(config_checkpoint_dir))
 
     # Example function to evaluate model with given parameters
-    def evaluate_model_with_params(params, i, name):
+    def evaluate_model_with_params(params, iteration, name):
         config['model']["architecture"]['g_num_blocks'] = params['n_blocks']
         config['model']["architecture"]['d_num_blocks'] = params['n_blocks']
 
@@ -208,7 +208,7 @@ def main():
             eval_metrics.finalize_epoch()
             param_scores[epoch-1] = eval_metrics.stats['fid'][epoch-1]
 
-        torch.save(param_scores, f"{os.environ['FILESDIR']}/random_search_scores/param_scores_random_search_step1_{name}_config{i}.pt")
+        torch.save(param_scores, f"{os.environ['FILESDIR']}/random_search_scores/param_scores_random_search_step1_{name}_config{iteration}.pt")
 
         return eval_metrics.stats['fid'][epochs-2], G, D, g_opt, d_opt, train_state
 

@@ -128,7 +128,7 @@ def main():
             evaluate_model_with_params(params, i, name)
 
     # Example function to evaluate model with given parameters
-    def evaluate_model_with_params(params, i, name):
+    def evaluate_model_with_params(params, iteration, name):
         C, C_params, C_stats, C_args = construct_classifier_from_checkpoint(
             params['classifier'], device=device)
         C.to(device)
@@ -146,12 +146,6 @@ def main():
 
         g_opt = Adam(G.parameters(), lr=params['g_lr'], betas=(params['g_beta1'], params['g_beta2']))
         d_opt = Adam(D.parameters(), lr=params['d_lr'], betas=(params['d_beta1'], params['d_beta2']))
-
-        train_state = {
-            'epoch': 0,
-            'best_epoch': 0,
-            'best_epoch_metric': float('inf'),
-        }
 
         G.load_state_dict(gen_cp['state'])
         D.load_state_dict(dis_cp['state'])
@@ -242,7 +236,7 @@ def main():
             eval_metrics.stats['fid'][epoch - 1], eval_metrics.stats['conf_dist'][epoch - 1])
 
         torch.save(param_scores,
-                   f"{os.environ['FILESDIR']}/random_search_scores/param_scores_random_search_step1_{name}_config{i}.pt")
+                   f"{os.environ['FILESDIR']}/random_search_scores/param_scores_random_search_step2_{name}_config{iteration}.pt")
 
     param_distributions = {
         'g_lr': uniform(loc=0.0001, scale=0.001),  # Uniform distribution between 0.0001 and 0.001
