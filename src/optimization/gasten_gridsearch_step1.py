@@ -95,22 +95,22 @@ def main():
     # Define hyperparameters and their possible values
 
     param_grid = {
-        'g_lr': [0.001, 0.0002, 0.0001],
-        'd_lr': [0.001, 0.0002, 0.0001],
-        'g_beta1': [0.1, 0.5, 0.9],
-        'd_beta1': [0.1, 0.5, 0.9],
-        'g_beta2': [0.1, 0.5, 0.9],
-        'd_beta2': [0.1, 0.5, 0.9],
-        'n_blocks': [3, 4, 5]
+        'g_lr': [0.001],
+        'd_lr': [0.001],
+        'g_beta1': [0.1],
+        'd_beta1': [0.1],
+        'g_beta2': [0.1],
+        'd_beta2': [0.1],
+        'n_blocks': [3]
     }
 
     # Training loop with grid search for hyperparameter optimization
     best_score = float('-inf')
-    i = 0
+    iteration = 0
     param_scores = {}
 
     for params in tqdm(list(ParameterGrid(param_grid))):
-        i += 1
+        iteration += 1
         current_score = float('-inf')
         config['model']["architecture"]['g_num_blocks'] = params['n_blocks']
         config['model']["architecture"]['d_num_blocks'] = params['n_blocks']
@@ -203,7 +203,7 @@ def main():
                      test_noise, device, None)
 
             eval_metrics.finalize_epoch()
-            current_score = eval_metrics.stats['fid'][epochs-1]
+            current_score = eval_metrics.stats['fid'][epoch-1]
             param_scores[epoch-1] = current_score
 
         # Check if the current set of hyperparameters is the best
@@ -217,6 +217,6 @@ def main():
                 file.write(os.path.join(config_checkpoint_dir))
 
 
-        torch.save(param_scores, f"{os.environ['FILESDIR']}/grid_search_scores/param_scores_grid_search_step2_{pos_class}v{neg_class}_iteration{iteration}.pt")
+        torch.save(param_scores, f"{os.environ['FILESDIR']}/grid_search_scores/param_scores_grid_search_step1_{pos_class}v{neg_class}_iteration{iteration}.pt")
 if __name__ == '__main__':
     main()

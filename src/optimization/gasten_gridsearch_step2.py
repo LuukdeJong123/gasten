@@ -120,14 +120,14 @@ def main():
 
     # Define hyperparameters and their possible values
     param_grid = {
-        'g_lr': [0.001, 0.0002, 0.0001],
-        'd_lr': [0.001, 0.0002, 0.0001],
-        'g_beta1': [0.1, 0.5, 0.9],
-        'd_beta1': [0.1, 0.5, 0.9],
-        'g_beta2': [0.1, 0.5, 0.9],
-        'd_beta2': [0.1, 0.5, 0.9],
-        'weights': [1, 15, 30],
-        'classifiers':  classifier_paths
+        'g_lr': [0.001],
+        'd_lr': [0.001],
+        'g_beta1': [0.1],
+        'd_beta1': [0.1],
+        'g_beta2': [0.1],
+        'd_beta2': [0.1],
+        'weight': [1],
+        'classifier':  classifier_paths
     }
 
     # Training loop with grid search for hyperparameter optimization
@@ -136,7 +136,6 @@ def main():
 
     for params in tqdm(list(ParameterGrid(param_grid))):
         iteration += 1
-        current_score = (float('-inf'), float('-inf'))
         C, C_params, C_stats, C_args = construct_classifier_from_checkpoint(
             params['classifier'], device=device)
         C.to(device)
