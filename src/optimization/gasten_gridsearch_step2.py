@@ -245,9 +245,8 @@ def main():
                      test_noise, device, None)
 
             eval_metrics.finalize_epoch()
-            current_score = (eval_metrics.stats['fid'][epoch], eval_metrics.stats['conf_dist'][epoch])
-
-        param_scores[i] = current_score
+            current_score = (eval_metrics.stats['fid'][epoch-1], eval_metrics.stats['conf_dist'][epoch-1])
+        param_scores[epoch] = current_score
 
     torch.save(param_scores, f"{os.environ['FILESDIR']}/grid_search_scores/param_scores_grid_search_step2_{pos_class}v{neg_class}.pt")
 

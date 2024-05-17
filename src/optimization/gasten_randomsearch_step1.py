@@ -92,17 +92,14 @@ def main():
     train_metrics.add('G_loss', iteration_metric=True)
     train_metrics.add('D_loss', iteration_metric=True)
 
-    i = 0
-    param_scores = {}
-
     def random_search(param_distributions, num_iterations, name):
         best_score = float('-inf')
 
-        for _ in range(num_iterations):
+        for i in range(num_iterations):
             params = {param: distribution.rvs() for param, distribution in param_distributions.items()}
 
             # Replace this part with your model training and evaluation
-            current_score, G, D, g_opt, d_opt, train_state = evaluate_model_with_params(params)
+            current_score, G, D, g_opt, d_opt, train_state = evaluate_model_with_params(params, i, name)
 
             if current_score > best_score:
                 best_score = current_score
@@ -114,12 +111,8 @@ def main():
                 with open(f'{os.environ["FILESDIR"]}/step-1-best-random-search-config-{pos_class}v{neg_class}.txt', 'w') as file:
                     file.write(os.path.join(config_checkpoint_dir))
 
-            param_scores[i] = current_score
-
-        torch.save(param_scores, f"{os.environ['FILESDIR']}/random_search_scores/param_scores_random_search_step1_{name}.pt")
-
     # Example function to evaluate model with given parameters
-    def evaluate_model_with_params(params):
+    def evaluate_model_with_params(params, i, name):
         config['model']["architecture"]['g_num_blocks'] = params['n_blocks']
         config['model']["architecture"]['d_num_blocks'] = params['n_blocks']
 
@@ -156,6 +149,7 @@ def main():
         iters_per_epoch = g_iters_per_epoch * n_disc_iters
 
         epochs = 11
+        param_scores = {}
         for epoch in range(1, epochs):
             data_iter = iter(dataloader)
             curr_g_iter = 0
@@ -212,6 +206,10 @@ def main():
                      test_noise, device, None)
 
             eval_metrics.finalize_epoch()
+            param_scores[epoch-1] = eval_metrics.stats['fid'][epoch-1]
+
+        torch.save(param_scores, f"{os.environ['FILESDIR']}/random_search_scores/param_scores_random_search_step1_{name}_config{i}.pt")
+
         return eval_metrics.stats['fid'][epochs-2], G, D, g_opt, d_opt, train_state
 
     param_distributions = {

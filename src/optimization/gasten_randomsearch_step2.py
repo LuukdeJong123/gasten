@@ -51,7 +51,6 @@ def main():
     classifier_paths = [f"{os.environ['FILESDIR']}/models/{args.dataset}.{pos_class}v{neg_class}/{classifier}"
                         for classifier in classifiers]
 
-
     dataset, num_classes, img_size = load_dataset(
         args.dataset, config["data-dir"], pos_class, neg_class)
 
@@ -120,22 +119,16 @@ def main():
     train_metrics.add('D_loss', iteration_metric=True)
 
     def random_search(param_distributions, num_iterations, name):
-        param_scores = {}
-
         for i in range(num_iterations):
             params = {
                 param: distribution.rvs() if param != 'classifier' else random.choice(param_distributions['classifier'])
                 for param, distribution in param_distributions.items()}
 
             # Replace this part with your model training and evaluation
-            current_score, G, D, g_opt, d_opt, train_state = evaluate_model_with_params(params)
-
-            param_scores[i] = current_score
-
-        torch.save(param_scores, f"{os.environ['FILESDIR']}/random_search_scores/param_scores_random_search_step2_{name}.pt")
+            evaluate_model_with_params(params, i, name)
 
     # Example function to evaluate model with given parameters
-    def evaluate_model_with_params(params):
+    def evaluate_model_with_params(params, i, name):
         C, C_params, C_stats, C_args = construct_classifier_from_checkpoint(
             params['classifier'], device=device)
         C.to(device)
@@ -190,6 +183,7 @@ def main():
         iters_per_epoch = g_iters_per_epoch * n_disc_iters
 
         epochs = 41
+        param_scores = {}
         for epoch in range(1, epochs):
             data_iter = iter(dataloader)
             curr_g_iter = 0
@@ -244,7 +238,11 @@ def main():
                      test_noise, device, None)
 
             eval_metrics.finalize_epoch()
-        return (eval_metrics.stats['fid'][epochs-2], eval_metrics.stats['conf_dist'][epochs-2]), G, D, g_opt, d_opt, train_state
+            param_scores[epoch - 1] = (
+            eval_metrics.stats['fid'][epoch - 1], eval_metrics.stats['conf_dist'][epoch - 1])
+
+        torch.save(param_scores,
+                   f"{os.environ['FILESDIR']}/random_search_scores/param_scores_random_search_step1_{name}_config{i}.pt")
 
     param_distributions = {
         'g_lr': uniform(loc=0.0001, scale=0.001),  # Uniform distribution between 0.0001 and 0.001

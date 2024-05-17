@@ -1,4 +1,4 @@
-project: gasten_20240214_baseline_3v0
+project: gasten_baseline_3v0
 name: fashion-3v0
 out-dir: out
 data-dir: data

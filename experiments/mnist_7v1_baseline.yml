@@ -1,4 +1,4 @@
-project: gasten_20240214_baseline_7v1
+project: gasten_baseline_7v1
 name: mnist-7v1
 out-dir: out
 data-dir: data

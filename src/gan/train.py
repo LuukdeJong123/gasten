@@ -5,7 +5,7 @@ from tqdm import tqdm
 import math
 from src.utils import MetricsLogger, group_images
 import matplotlib.pyplot as plt
-
+import os
 
 def loss_terms_to_str(loss_items):
     result = ''
@@ -98,7 +98,7 @@ def train_gen(update_fn, G, D, g_opt,
 
 
 def train(config, dataset, device, n_epochs, batch_size, G, g_opt, g_updater, D,
-          d_opt, d_crit, test_noise, fid_metrics, n_disc_iters,
+          d_opt, d_crit, test_noise, fid_metrics, n_disc_iters, name,
           early_stop=None,  # Tuple of (key, crit)
           start_early_stop_when=None,  # Tuple of (key, crit):
           checkpoint_dir=None, checkpoint_every=10, fixed_noise=None, c_out_hist=None,
@@ -156,6 +156,7 @@ def train(config, dataset, device, n_epochs, batch_size, G, g_opt, g_updater, D,
     log_every_g_iter = 50
 
     print("Training...")
+    param_scores = {}
     for epoch in range(1, n_epochs+1):
         data_iter = iter(dataloader)
         curr_g_iter = 0
@@ -178,7 +179,7 @@ def train(config, dataset, device, n_epochs, batch_size, G, g_opt, g_updater, D,
                 curr_g_iter += 1
 
                 g_loss, g_loss_terms = train_gen(g_updater,
-                    G, D, g_opt, batch_size, train_metrics, device)
+                                                 G, D, g_opt, batch_size, train_metrics, device)
 
                 ###
                 # Log stats
@@ -212,6 +213,10 @@ def train(config, dataset, device, n_epochs, batch_size, G, g_opt, g_updater, D,
                  test_noise, device, c_out_hist)
 
         eval_metrics.finalize_epoch()
+        if "conf_dist" in eval_metrics.stats:
+            param_scores[epoch] = (eval_metrics.stats['fid'][epoch - 1], eval_metrics.stats['conf_dist'][epoch - 1])
+        else:
+            param_scores[epoch] = eval_metrics.stats['fid'][epoch-1]
 
         ###
         # Checkpoint GAN
@@ -220,4 +225,5 @@ def train(config, dataset, device, n_epochs, batch_size, G, g_opt, g_updater, D,
             latest_cp = checkpoint_gan(
                 G, D, g_opt, d_opt, train_state, {"eval": eval_metrics.stats, "train": train_metrics.stats}, config, epoch=epoch, output_dir=checkpoint_dir)
 
+    torch.save(param_scores, f"{os.environ['FILESDIR']}/baseline_scores/{name}.pt")
     return train_state, best_cp, train_metrics, eval_metrics
