@@ -11,10 +11,10 @@ def get_immediate_subdirectories(a_dir):
 
 epochs = []
 
-directories = get_immediate_subdirectories("C:\\Users\\l-u-u\\PycharmProjects\\gasten\\src\\optimization")
+directories = get_immediate_subdirectories("C:\\May17T14-58_1wqj3vdo")
 for directory in directories:
     with open(
-            "C:\\Users\\l-u-u\\PycharmProjects\\gasten\\src\\optimization\\" + directory + "\\stats.json") as json_file:
+            "C:\\May17T14-58_1wqj3vdo\\" + directory + "\\stats.json") as json_file:
         json_data = json.load(json_file)
         epochs = [*range(1, len(json_data['eval']['fid']) + 1, 1)]
         plt.plot(epochs, json_data['eval']['fid'], label="Configuration " + directory)
@@ -27,5 +27,5 @@ plt.axvline(x=10, linestyle='dashed', color='black')
 plt.xticks(epochs)
 
 plt.legend(loc='center left', bbox_to_anchor=(0.8, 0.8), fontsize='xx-small')
-plt.title('Hyperparameter optimization of step 1 in GASTeN training process')
+plt.title('FID Score Across Epochs for MNIST 8v0 Hyperband: Step 1')
 plt.show()
