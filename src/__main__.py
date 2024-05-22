@@ -106,7 +106,7 @@ def train_modified_gan(config, dataset, cp_dir, gan_path, test_noise,
         start_early_stop_when=('fid', early_stop_crit_step_1),
         checkpoint_dir=gan_cp_dir, fixed_noise=fixed_noise, c_out_hist=c_out_hist,
         checkpoint_every=checkpoint_every,
-        classifier=C, name=f"param_scores_baseline_step1_{pos_class}v{neg_class}_{i}")
+        classifier=C, name=f"param_scores_baseline_step2_{pos_class}v{neg_class}_{i}")
 
     wandb.finish()
 
