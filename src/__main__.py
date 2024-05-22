@@ -38,7 +38,7 @@ def construct_optimizers(config, G, D):
 
 def train_modified_gan(config, dataset, cp_dir, gan_path, test_noise,
                        fid_metrics, c_out_hist,
-                       C, C_name, C_params, C_stats, C_args, weight, fixed_noise, num_classes, device, seed, run_id, s1_epoch, pos_class, neg_class):
+                       C, C_name, C_params, C_stats, C_args, weight, fixed_noise, num_classes, device, seed, run_id, s1_epoch, pos_class, neg_class, i):
     print("Running experiment with classifier {} and weight {} ...".format(
         C_name, weight))
     run_name = '{}_{}_{}'.format(C_name, weight, s1_epoch)
@@ -106,7 +106,7 @@ def train_modified_gan(config, dataset, cp_dir, gan_path, test_noise,
         start_early_stop_when=('fid', early_stop_crit_step_1),
         checkpoint_dir=gan_cp_dir, fixed_noise=fixed_noise, c_out_hist=c_out_hist,
         checkpoint_every=checkpoint_every,
-        classifier=C, name=f"param_scores_grid_search_step2_{pos_class}v{neg_class}")
+        classifier=C, name=f"param_scores_baseline_step1_{pos_class}v{neg_class}_{i}")
 
     wandb.finish()
 
@@ -244,7 +244,7 @@ def main():
                 n_disc_iters,
                 early_stop=early_stop,
                 checkpoint_dir=original_gan_cp_dir, fixed_noise=fixed_noise,
-                checkpoint_every=checkpoint_every, name=f"param_scores_grid_search_step1_{pos_class}v{neg_class}_{i}")
+                checkpoint_every=checkpoint_every, name=f"param_scores_baseline_step1_{pos_class}v{neg_class}_{i}")
 
             wandb.finish()
         else:
@@ -321,7 +321,7 @@ def main():
                     eval_metrics = train_modified_gan(config, dataset, cp_dir, gan_path,
                                                       test_noise, fid_metrics, c_out_hist,
                                                       C, C_name, C_params, C_stats, C_args,
-                                                      weight, fixed_noise, num_classes, device, mod_gan_seed, run_id, epoch, pos_class, neg_class)
+                                                      weight, fixed_noise, num_classes, device, mod_gan_seed, run_id, epoch, pos_class, neg_class, i)
 
                     step2_metrics.append(pd.DataFrame(
                         {'fid': eval_metrics.stats['fid'],

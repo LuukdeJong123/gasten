@@ -45,7 +45,6 @@ parser.add_argument('--nf', type=str, default="1,2,4,8",
 parser.add_argument("--nz", dest="nz", default=2000, type=int)
 parser.add_argument("--z-dim", dest="z_dim", default=64, type=int)
 parser.add_argument("--config", dest="config_path_optim", required=True, help="Config file gasten")
-parser.add_argument("--config_clustering", dest="config_path_clustering", required=True, help="Config file clustering")
 parser.add_argument("--seed", type=int, default=None)
 
 

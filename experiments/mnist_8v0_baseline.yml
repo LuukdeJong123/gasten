@@ -50,6 +50,6 @@ train:
     batch-size: 64
     disc-iters: 1
     classifier:
-      - models/mnist.7v1/cnn-2-1.38825
+      - models/mnist.8v0/cnn-2-1.67171
     weight:
       - 25
