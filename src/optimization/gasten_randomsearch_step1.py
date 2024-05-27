@@ -6,6 +6,7 @@ import wandb
 import math
 import os
 from scipy.stats import uniform, randint
+import time
 
 from src.utils.config import read_config
 from src.gan import construct_gan, construct_loss
@@ -16,6 +17,7 @@ from src.utils import MetricsLogger, group_images
 from src.gan.train import train_disc, train_gen, loss_terms_to_str, evaluate
 from src.utils import load_z, create_checkpoint_path, seed_worker
 from src.utils.checkpoint import checkpoint_gan
+
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -94,6 +96,8 @@ def main():
 
     def random_search(param_distributions, num_iterations, name):
         best_score = float('-inf')
+        time_limit = 3600
+        start_time = time.time()
 
         for i in range(num_iterations):
             params = {param: distribution.rvs() for param, distribution in param_distributions.items()}
@@ -108,8 +112,14 @@ def main():
                     G, D, g_opt, d_opt, train_state,
                     {"eval": eval_metrics.stats, "train": train_metrics.stats}, config,
                     output_dir=config_checkpoint_dir)
-                with open(f'{os.environ["FILESDIR"]}/step-1-best-random-search-config-{pos_class}v{neg_class}.txt', 'w') as file:
+                with open(f'{os.environ["FILESDIR"]}/step-1-best-random-search-config-{pos_class}v{neg_class}.txt',
+                          'w') as file:
                     file.write(os.path.join(config_checkpoint_dir))
+
+            elapsed_time = time.time() - start_time
+            if elapsed_time > time_limit:
+                print("Time limit reached. Stopping the random search.")
+                break
 
     # Example function to evaluate model with given parameters
     def evaluate_model_with_params(params, iteration, name):
@@ -180,7 +190,7 @@ def main():
                     if curr_g_iter % log_every_g_iter == 0 or \
                             curr_g_iter == g_iters_per_epoch:
                         print('[%d/%d][%d/%d]\tG loss: %.4f %s; D loss: %.4f %s'
-                              % (epoch, epochs-1, curr_g_iter, g_iters_per_epoch, g_loss.item(),
+                              % (epoch, epochs - 1, curr_g_iter, g_iters_per_epoch, g_loss.item(),
                                  loss_terms_to_str(g_loss_terms), d_loss.item(),
                                  loss_terms_to_str(d_loss_terms)))
 
@@ -206,11 +216,12 @@ def main():
                      test_noise, device, None)
 
             eval_metrics.finalize_epoch()
-            param_scores[epoch-1] = eval_metrics.stats['fid'][epoch-1]
+            param_scores[epoch - 1] = eval_metrics.stats['fid'][epoch - 1]
 
-        torch.save(param_scores, f"{os.environ['FILESDIR']}/random_search_scores/param_scores_random_search_step1_{name}_iteration_{iteration}.pt")
+        torch.save(param_scores,
+                   f"{os.environ['FILESDIR']}/random_search_scores/param_scores_random_search_step1_{name}_iteration_{iteration}.pt")
 
-        return eval_metrics.stats['fid'][epochs-2], G, D, g_opt, d_opt, train_state
+        return eval_metrics.stats['fid'][epochs - 2], G, D, g_opt, d_opt, train_state
 
     param_distributions = {
         'g_lr': uniform(loc=0.0001, scale=0.001),  # Uniform distribution between 0.0001 and 0.001
@@ -222,7 +233,8 @@ def main():
         'n_blocks': randint(low=1, high=5),  # Discrete uniform distribution between 1 and 5
     }
 
-    random_search(param_distributions, num_iterations=10, name=f"{pos_class}v{neg_class}")
+    random_search(param_distributions, num_iterations=100, name=f"{pos_class}v{neg_class}")
+
 
 if __name__ == '__main__':
     main()
