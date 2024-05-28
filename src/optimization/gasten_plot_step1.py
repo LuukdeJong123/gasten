@@ -11,10 +11,10 @@ def get_immediate_subdirectories(a_dir):
 
 epochs = []
 
-directories = get_immediate_subdirectories("C:\\bayesian-8v0\\optimization\\May17T14-49_1ejayzdw")
+directories = get_immediate_subdirectories("C:\\bayesian-8v0\\optimization\\May28T11-06_3tpnccv1")
 for directory in directories:
     with open(
-            "C:\\bayesian-8v0\\optimization\\May17T14-49_1ejayzdw\\" + directory + "\\stats.json") as json_file:
+            "C:\\bayesian-8v0\\optimization\\May28T11-06_3tpnccv1\\" + directory + "\\stats.json") as json_file:
         json_data = json.load(json_file)
         epochs = [*range(1, len(json_data['eval']['fid']) + 1, 1)]
         plt.plot(epochs, json_data['eval']['fid'], label="Configuration " + directory)

@@ -261,8 +261,8 @@ def main():
 
     objectives = ["fid", "confusion_distance"]
 
-    scenario = Scenario(configspace, objectives=objectives, deterministic=True, n_trials=22, min_budget=2,
-                        max_budget=40)
+    scenario = Scenario(configspace, objectives=objectives, deterministic=True, min_budget=2,
+                        max_budget=40, walltime_limit=3600)
     multi_objective_algorithm = ParEGO(scenario)
     smac = HyperbandFacade(scenario, train, multi_objective_algorithm=multi_objective_algorithm, overwrite=True)
     incumbents = smac.optimize()

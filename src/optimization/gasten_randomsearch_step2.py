@@ -6,6 +6,7 @@ import wandb
 import os
 from scipy.stats import uniform, randint
 import random
+import time
 
 from src.metrics import fid, LossSecondTerm
 from src.gan.update_g import UpdateGeneratorGASTEN
@@ -119,6 +120,9 @@ def main():
     train_metrics.add('D_loss', iteration_metric=True)
 
     def random_search(param_distributions, num_iterations, name):
+        time_limit = 3600
+        start_time = time.time()
+
         for i in range(num_iterations):
             params = {
                 param: distribution.rvs() if param != 'classifier' else random.choice(param_distributions['classifier'])
@@ -127,6 +131,10 @@ def main():
             # Replace this part with your model training and evaluation
             evaluate_model_with_params(params, i, name)
 
+            elapsed_time = time.time() - start_time
+            if elapsed_time > time_limit:
+                print("Time limit reached. Stopping the random search.")
+                break
     # Example function to evaluate model with given parameters
     def evaluate_model_with_params(params, iteration, name):
         C, C_params, C_stats, C_args = construct_classifier_from_checkpoint(

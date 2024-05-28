@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 import wandb
 import math
 import os
+import numpy as np
 
 from src.utils.config import read_config
 from src.gan import construct_gan, construct_loss
@@ -15,10 +16,9 @@ from src.gan.update_g import UpdateGeneratorGAN
 from src.metrics import fid
 from src.utils import MetricsLogger, group_images
 from src.gan.train import train_disc, train_gen, loss_terms_to_str, evaluate
-from src.utils.checkpoint import checkpoint_gan
 from src.utils import load_z, setup_reprod, create_checkpoint_path, seed_worker
 import random
-import numpy as np
+
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -211,17 +211,6 @@ def main():
                 eval_metrics.finalize_epoch()
                 current_score = eval_metrics.stats['fid'][epoch-1]
                 param_scores[epoch-1] = current_score
-
-            # # Check if the current set of hyperparameters is the best
-            # if current_score > best_score:
-            #     best_score = current_score
-            #     config_checkpoint_dir = os.path.join(cp_dir, 'best-grid-search-config')
-            #     checkpoint_gan(
-            #         G, D, g_opt, d_opt, train_state,
-            #         {"eval": eval_metrics.stats, "train": train_metrics.stats}, config, output_dir=config_checkpoint_dir)
-            #     with open(f'{os.environ["FILESDIR"]}/step-1-best-grid-search-config-{pos_class}v{neg_class}.txt', 'w') as file:
-            #         file.write(os.path.join(config_checkpoint_dir))
-
 
             torch.save(param_scores, f"{os.environ['FILESDIR']}/grid_search_scores/param_scores_grid_search_step1_{pos_class}v{neg_class}_config_{iteration}_seed_{j}.pt")
 if __name__ == '__main__':

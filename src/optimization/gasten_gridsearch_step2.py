@@ -1,11 +1,13 @@
 import torch
 from torch.optim import Adam
-from sklearn.model_selection import ParameterGrid
+from sklearn.model_selection import ParameterSampler
 from tqdm import tqdm
 import argparse
 from dotenv import load_dotenv
 import wandb
 import os
+import time
+import numpy as np
 
 from src.metrics import fid, LossSecondTerm
 from src.gan.update_g import UpdateGeneratorGASTEN
@@ -133,8 +135,11 @@ def main():
     # Training loop with grid search for hyperparameter optimization
     iteration = 0
     param_scores = {}
+    time_limit = 3600
+    start_time = time.time()
+    rng = np.random.RandomState(0)
 
-    for params in tqdm(list(ParameterGrid(param_grid))):
+    for params in tqdm(list(ParameterSampler(param_grid, n_iter=1, random_state=rng))):
         iteration += 1
         C, C_params, C_stats, C_args = construct_classifier_from_checkpoint(
             params['classifier'], device=device)
@@ -243,5 +248,9 @@ def main():
 
         torch.save(param_scores, f"{os.environ['FILESDIR']}/grid_search_scores/param_scores_grid_search_step2_{pos_class}v{neg_class}_iteration{iteration}.pt")
 
+        elapsed_time = time.time() - start_time
+        if elapsed_time > time_limit:
+            print("Time limit reached. Stopping the grid search.")
+            break
 if __name__ == '__main__':
     main()

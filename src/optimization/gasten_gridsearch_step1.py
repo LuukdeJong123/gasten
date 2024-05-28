@@ -1,6 +1,6 @@
 import torch
 from torch.optim import Adam
-from sklearn.model_selection import ParameterGrid
+from sklearn.model_selection import ParameterSampler
 from tqdm import tqdm
 import argparse
 from dotenv import load_dotenv
@@ -8,6 +8,7 @@ import wandb
 import math
 import os
 import time
+import numpy as np
 
 from src.utils.config import read_config
 from src.gan import construct_gan, construct_loss
@@ -112,8 +113,9 @@ def main():
 
     time_limit = 3600
     start_time = time.time()
+    rng = np.random.RandomState(0)
 
-    for params in tqdm(list(ParameterGrid(param_grid))):
+    for params in tqdm(list(ParameterSampler(param_grid, n_iter=1, random_state=rng))):
         iteration += 1
         current_score = float('-inf')
         config['model']["architecture"]['g_num_blocks'] = params['n_blocks']
