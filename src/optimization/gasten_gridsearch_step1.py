@@ -115,7 +115,7 @@ def main():
     start_time = time.time()
     rng = np.random.RandomState(0)
 
-    for params in tqdm(list(ParameterSampler(param_grid, n_iter=1, random_state=rng))):
+    for params in tqdm(list(ParameterSampler(param_grid, n_iter=100, random_state=rng))):
         iteration += 1
         current_score = float('-inf')
         config['model']["architecture"]['g_num_blocks'] = params['n_blocks']

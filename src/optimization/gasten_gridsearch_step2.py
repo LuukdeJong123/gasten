@@ -139,7 +139,7 @@ def main():
     start_time = time.time()
     rng = np.random.RandomState(0)
 
-    for params in tqdm(list(ParameterSampler(param_grid, n_iter=1, random_state=rng))):
+    for params in tqdm(list(ParameterSampler(param_grid, n_iter=100, random_state=rng))):
         iteration += 1
         C, C_params, C_stats, C_args = construct_classifier_from_checkpoint(
             params['classifier'], device=device)
