@@ -1,4 +1,4 @@
-project: BOHB_mnist
+project: BOHB_fashion_mnist
 name: optimization
 out-dir: out
 data-dir: data

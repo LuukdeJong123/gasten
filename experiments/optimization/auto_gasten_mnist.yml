@@ -1,4 +1,4 @@
-project: auto_gasten_fashion_mnist
+project: auto_gasten_mnist
 name: optimization
 out-dir: out
 data-dir: data
