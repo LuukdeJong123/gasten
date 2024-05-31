@@ -233,7 +233,7 @@ def main():
         'n_blocks': randint(low=1, high=5),  # Discrete uniform distribution between 1 and 5
     }
 
-    random_search(param_distributions, num_iterations=100, name=f"{pos_class}v{neg_class}")
+    random_search(param_distributions, num_iterations=100, name=f"{args.dataset}_{pos_class}v{neg_class}")
 
 
 if __name__ == '__main__':

@@ -131,7 +131,7 @@ def main():
                     '--neg', neg_class, '--dataset', args.dataset, '--fid-stats', fid_stats_path])
 
 
-    with open(f'step-2-best-config-{pos_class}v{neg_class}.txt', 'r') as file:
+    with open(f'step-2-best-config-{args.dataset}-{pos_class}v{neg_class}.txt', 'r') as file:
         lines = file.read().splitlines()
         gan_path = lines[0]
         best_config_optim = json.loads(lines[1].replace("'", '"'))
@@ -174,47 +174,37 @@ def main():
     images_array = []
     syn_images_f = torch.empty(0)  # Initialize empty tensor
 
-    # Loop until syn_images_f has around 1000 images
     while len(syn_images_f) < 1751:
-        # create fake images
         test_noise = torch.randn(config_run['generated_images'], config_clustering["clustering"]["z-dim"],
                                  device=device)
         noise_loader = DataLoader(TensorDataset(test_noise), batch_size=batch_size, shuffle=False)
 
-        # Clear images_array before populating with new batch
         images_array.clear()
 
         for idx, batch in enumerate(tqdm(noise_loader, desc='Evaluating fake images')):
-            # generate images
             with torch.no_grad():
                 netG.eval()
                 batch_images = netG(*batch)
 
             images_array.append(batch_images)
 
-        # Concatenate batches into a single array
         images = torch.cat(images_array, dim=0)
 
-        # apply classifier to fake images
         with torch.no_grad():
             pred = C(images).cpu().detach().numpy()
 
-        # filter images so that ACD < threshold
         mask = (pred >= config_run['probabilities']['min']) & (pred <= config_run['probabilities']['max'])
         filtered_images = images[mask]
 
-        # Concatenate the filtered images to syn_images_f
         syn_images_f = torch.cat([syn_images_f.to(device), filtered_images.to(device)], dim=0)
 
-    # Shuffle the syn_images_f tensor
     shuffled_indices = torch.randperm(syn_images_f.size(0))
     syn_images_f_shuffled = syn_images_f[shuffled_indices]
 
-    # Take the first 1750 instances
     sampled_images = syn_images_f_shuffled[:1750]
 
     #Save
-    save(config_optim, sampled_images, f"{pos_class}v{neg_class}")
+    save(config_optim, sampled_images, f"{args.dataset}_{pos_class}v{neg_class}")
 
 
 if __name__ == '__main__':

@@ -257,7 +257,7 @@ def main():
         'classifier': classifier_paths
     }
 
-    random_search(param_distributions, num_iterations=10, name=f"{pos_class}v{neg_class}")
+    random_search(param_distributions, num_iterations=10, name=f"{args.dataset}_{pos_class}v{neg_class}")
 
 
 if __name__ == '__main__':

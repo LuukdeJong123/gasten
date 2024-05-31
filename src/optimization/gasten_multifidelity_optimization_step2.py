@@ -82,7 +82,7 @@ def main():
 
     log_every_g_iter = 50
 
-    with open(f'{os.environ["FILESDIR"]}/step-1-best-config-{pos_class}v{neg_class}.txt', 'r') as file:
+    with open(f'{os.environ["FILESDIR"]}/step-1-best-config-{args.dataset}-{pos_class}v{neg_class}.txt', 'r') as file:
         gan_path = file.read()
 
     if not os.path.exists(gan_path):
@@ -277,7 +277,7 @@ def main():
 
     config_with_lowest_conf_dist = smac.intensifier.trajectory[len(smac.intensifier.trajectory) - 1].config_ids[
         cost_with_lowest_conf_dist]
-    with open(f'{os.environ["FILESDIR"]}/step-2-best-config-{pos_class}v{neg_class}.txt', 'w') as file:
+    with open(f'{os.environ["FILESDIR"]}/step-2-best-config-{args.dataset}-{pos_class}v{neg_class}.txt', 'w') as file:
         file.write(os.path.join(cp_dir, str(config_with_lowest_conf_dist)) + '\n')
         for incumbent in incumbents:
             if config_with_lowest_conf_dist == incumbent.config_id:

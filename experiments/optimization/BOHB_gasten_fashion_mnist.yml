@@ -1,4 +1,4 @@
-project: grid_search
+project: BOHB_mnist
 name: optimization
 out-dir: out
 data-dir: data

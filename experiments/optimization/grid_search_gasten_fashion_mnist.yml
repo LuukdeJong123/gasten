@@ -1,4 +1,4 @@
-project: random_search
+project: grid_search_fashion_mnist
 name: optimization
 out-dir: out
 data-dir: data

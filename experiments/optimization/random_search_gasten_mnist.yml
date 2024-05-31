@@ -1,4 +1,4 @@
-project: auto_gasten
+project: random_search_mnist
 name: optimization
 out-dir: out
 data-dir: data

@@ -1,4 +1,4 @@
-project: bayesian
+project: hyperband_mnist
 name: optimization
 out-dir: out
 data-dir: data

@@ -1,4 +1,4 @@
-project: BOHB
+project: bayesian_mnist
 name: optimization
 out-dir: out
 data-dir: data
