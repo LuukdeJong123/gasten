@@ -120,7 +120,7 @@ def main():
     train_metrics.add('D_loss', iteration_metric=True)
 
     def random_search(param_distributions, num_iterations, name):
-        time_limit = 3600
+        time_limit = 14400
         start_time = time.time()
 
         for i in range(num_iterations):
@@ -244,7 +244,7 @@ def main():
             eval_metrics.stats['fid'][epoch - 1], eval_metrics.stats['conf_dist'][epoch - 1])
 
         torch.save(param_scores,
-                   f"{os.environ['FILESDIR']}/random_search_scores/param_scores_random_search_step2_{name}_iteration_{iteration}.pt")
+                   f"{os.environ['FILESDIR']}/random_search_scores_fashion_mnist/param_scores_random_search_step2_{name}_iteration_{iteration}.pt")
 
     param_distributions = {
         'g_lr': uniform(loc=0.0001, scale=0.001),  # Uniform distribution between 0.0001 and 0.001

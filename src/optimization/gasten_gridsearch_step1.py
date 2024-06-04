@@ -117,7 +117,7 @@ def main():
 
     for params in tqdm(list(ParameterSampler(param_grid, n_iter=100, random_state=rng))):
         iteration += 1
-        current_score = float('-inf')
+        current_score = float('inf')
         config['model']["architecture"]['g_num_blocks'] = params['n_blocks']
         config['model']["architecture"]['d_num_blocks'] = params['n_blocks']
 
@@ -213,7 +213,7 @@ def main():
             param_scores[epoch-1] = current_score
 
         # Check if the current set of hyperparameters is the best
-        if current_score > best_score:
+        if current_score < best_score:
             best_score = current_score
             config_checkpoint_dir = os.path.join(cp_dir, 'best-grid-search-config')
             checkpoint_gan(
@@ -223,7 +223,7 @@ def main():
                 file.write(os.path.join(config_checkpoint_dir))
 
 
-        torch.save(param_scores, f"{os.environ['FILESDIR']}/grid_search_scores/param_scores_grid_search_step1_{args.dataset}_{pos_class}v{neg_class}_iteration_{iteration}.pt")
+        torch.save(param_scores, f"{os.environ['FILESDIR']}/grid_search_scores_fashion_mnist/param_scores_grid_search_step1_{args.dataset}_{pos_class}v{neg_class}_iteration_{iteration}.pt")
 
         elapsed_time = time.time() - start_time
         if elapsed_time > time_limit:

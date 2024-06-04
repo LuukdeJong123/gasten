@@ -135,7 +135,7 @@ def main():
     # Training loop with grid search for hyperparameter optimization
     iteration = 0
     param_scores = {}
-    time_limit = 3600
+    time_limit = 14400
     start_time = time.time()
     rng = np.random.RandomState(0)
 
@@ -246,7 +246,7 @@ def main():
             current_score = (eval_metrics.stats['fid'][epoch-1], eval_metrics.stats['conf_dist'][epoch-1])
             param_scores[epoch-1] = current_score
 
-        torch.save(param_scores, f"{os.environ['FILESDIR']}/grid_search_scores/param_scores_grid_search_step2_{args.dataset}_{pos_class}v{neg_class}_iteration_{iteration}.pt")
+        torch.save(param_scores, f"{os.environ['FILESDIR']}/grid_search_scores_fashion_mnist/param_scores_grid_search_step2_{args.dataset}_{pos_class}v{neg_class}_iteration_{iteration}.pt")
 
         elapsed_time = time.time() - start_time
         if elapsed_time > time_limit:

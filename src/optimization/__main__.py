@@ -131,7 +131,7 @@ def main():
                     '--neg', neg_class, '--dataset', args.dataset, '--fid-stats', fid_stats_path])
 
 
-    with open(f'step-2-best-config-{args.dataset}-{pos_class}v{neg_class}.txt', 'r') as file:
+    with open(f'{os.environ["FILESDIR"]}/step-2-best-config-{args.dataset}-{pos_class}v{neg_class}.txt', 'r') as file:
         lines = file.read().splitlines()
         gan_path = lines[0]
         best_config_optim = json.loads(lines[1].replace("'", '"'))

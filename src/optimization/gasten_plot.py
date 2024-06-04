@@ -6,7 +6,7 @@ import numpy as np
 
 random_search_data = []
 for i in range(20):
-    data = torch.load(f"C:\\random_search_scores\\param_scores_random_search_step1_8v0_iteration_{i}.pt",
+    data = torch.load(f"C:\\random_search_scores_fashion_mnist\\param_scores_random_search_step1_fashion-mnist_3v0_iteration_{i}.pt",
                       map_location=torch.device('cpu'))
     random_search_data.append(data)
 
@@ -14,8 +14,8 @@ for i in range(20):
 random_search_scores = [score for iteration in random_search_data for score in iteration.values()]
 
 grid_search_data = []
-for i in range(1, 20):
-    data = torch.load(f"C:\\grid_search_scores_tmp\\param_scores_grid_search_step1_8v0_iteration{i}.pt",
+for i in range(1, 18):
+    data = torch.load(f"C:\\grid_search_scores_fashion_mnist\\param_scores_grid_search_step1_fashion-mnist_3v0_iteration_{i}.pt",
                       map_location=torch.device('cpu'))
     grid_search_data.append(data)
 
@@ -29,27 +29,27 @@ def get_immediate_subdirectories(a_dir):
 
 bayesian_optimization_scores = []
 
-directories = get_immediate_subdirectories("C:\\May31T08-59_2k23k1z3")
+directories = get_immediate_subdirectories("C:\\bayesian_fashion_mnist-3v0\\optimization\\May31T22-54_4ghvj56t")
 for directory in directories:
-    with open("C:\\May31T08-59_2k23k1z3\\" + directory + "\\stats.json") as json_file:
+    with open("C:\\bayesian_fashion_mnist-3v0\\optimization\\May31T22-54_4ghvj56t\\" + directory + "\\stats.json") as json_file:
         json_data = json.load(json_file)
         scores = json_data['eval']['fid']
         bayesian_optimization_scores.extend(scores)
 
 hyperband_optimization_scores = []
 
-directories = get_immediate_subdirectories("C:\\May31T08-59_3rx9915r")
+directories = get_immediate_subdirectories("C:\\hyperband_fashion_mnist-3v0\\optimization\\May31T22-55_3p4jan79")
 for directory in directories:
-    with open("C:\\May31T08-59_3rx9915r\\" + directory + "\\stats.json") as json_file:
+    with open("C:\\hyperband_fashion_mnist-3v0\\optimization\\May31T22-55_3p4jan79\\" + directory + "\\stats.json") as json_file:
         json_data = json.load(json_file)
         scores = json_data['eval']['fid']
         hyperband_optimization_scores.extend(scores)
 
 BOHB_optimization_scores = []
 
-directories = get_immediate_subdirectories("C:\\May31T09-00_2c5p03kx")
+directories = get_immediate_subdirectories("C:\\BOHB_fashion_mnist-3v0\\optimization\\May31T22-54_24pfsudr")
 for directory in directories:
-    with open("C:\\May31T09-00_2c5p03kx\\" + directory + "\\stats.json") as json_file:
+    with open("C:\\BOHB_fashion_mnist-3v0\\optimization\\May31T22-54_24pfsudr\\" + directory + "\\stats.json") as json_file:
         json_data = json.load(json_file)
         scores = json_data['eval']['fid']
         BOHB_optimization_scores.extend(scores)
@@ -65,9 +65,9 @@ plt.plot(range(1, len(hyperband_optimization_scores) + 1), sorted(hyperband_opti
 plt.plot(range(1, len(BOHB_optimization_scores) + 1), sorted(BOHB_optimization_scores, reverse=True), label='BOHB')
 plt.xlabel('Iteration')
 plt.ylabel('FID Score')
-plt.title('Converging FID Score for MNIST 8v0: Step 1')
+plt.title('Converging FID Score for fashion-MNIST 3v0 (T-shirt v Dress): Step 1')
 plt.legend()
-plt.savefig('MNIST_8v0_convergence_step1.png')
+plt.savefig('fasion-MNIST_3v0_convergence_step1.png')
 
 # Plot 2: Box Plot
 plt.figure(figsize=(10, 5))
@@ -76,7 +76,7 @@ box = plt.boxplot(
     labels=['Grid Search', 'Random Search', 'Bayesian Optimization', 'Hyperband', 'BOHB'])
 
 plt.ylabel('FID Score')
-plt.title('Boxplot of FID Scores for MNIST 8v0: Step 1')
+plt.title('Boxplot of FID Scores for fashion-MNIST 3v0 (T-shirt v Dress): Step 1')
 
 # Annotate min and max values
 def annotate_boxplot(boxplot, data):
@@ -89,4 +89,4 @@ def annotate_boxplot(boxplot, data):
 annotate_boxplot(box, [grid_search_scores, random_search_scores, bayesian_optimization_scores, hyperband_optimization_scores, BOHB_optimization_scores])
 
 # Save and show the plot
-plt.savefig('MNIST_8v0_boxplot_step1.png')
+plt.savefig('fasion-MNIST_3v0_boxplot_step1.png')

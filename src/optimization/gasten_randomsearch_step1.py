@@ -95,7 +95,7 @@ def main():
     train_metrics.add('D_loss', iteration_metric=True)
 
     def random_search(param_distributions, num_iterations, name):
-        best_score = float('-inf')
+        best_score = float('inf')
         time_limit = 3600
         start_time = time.time()
 
@@ -105,9 +105,9 @@ def main():
             # Replace this part with your model training and evaluation
             current_score, G, D, g_opt, d_opt, train_state = evaluate_model_with_params(params, i, name)
 
-            if current_score > best_score:
+            if current_score < best_score:
                 best_score = current_score
-                config_checkpoint_dir = os.path.join(cp_dir, 'best-grid-search-config')
+                config_checkpoint_dir = os.path.join(cp_dir, 'best-random-search-config')
                 checkpoint_gan(
                     G, D, g_opt, d_opt, train_state,
                     {"eval": eval_metrics.stats, "train": train_metrics.stats}, config,
