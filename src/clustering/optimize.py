@@ -33,7 +33,7 @@ PARAM_SPACE = {
         'tsne__perplexity': Integer(5, 30),
     },
     'gmm': {
-        'gmm__n_components': Integer(3, 15)
+        'gmm__n_components': Integer(8, 20)
     },
     'hdbscan': {
         'hdbscan__cluster_selection_epsilon': Real(0, 5),

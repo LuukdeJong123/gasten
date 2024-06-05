@@ -109,50 +109,50 @@ def main():
         print('No positive and or negative class given!')
         exit()
 
-    print(f"\nGenerating FID score for {pos_class}v{neg_class} ...")
-    subprocess.run(['python3', '-m', 'src.metrics.fid',
-                    '--data', args.dataroot,
-                    '--dataset', args.dataset,
-                    '--device', args.device,
-                    '--pos', pos_class, '--neg', neg_class])
+    # print(f"\nGenerating FID score for {pos_class}v{neg_class} ...")
+    # subprocess.run(['python3', '-m', 'src.metrics.fid',
+    #                 '--data', args.dataroot,
+    #                 '--dataset', args.dataset,
+    #                 '--device', args.device,
+    #                 '--pos', pos_class, '--neg', neg_class])
 
     fid_stats_path = f"{os.environ['FILESDIR']}/data/fid-stats/stats.inception.{args.dataset}.{pos_class}v{neg_class}.npz"
 
-    print(f"\nGenerating classifiers for {pos_class}v{neg_class} ...")
-    for clf_type, nf, epochs in itertools.product(l_clf_type, l_nf, l_epochs):
-        print("\n", clf_type, nf, epochs)
-        proc = subprocess.run(["python3", "-m", "src.classifier.train",
-                               "--device", args.device,
-                               "--data-dir", args.dataroot,
-                               "--out-dir", args.out_dir_models,
-                               "--dataset", args.dataset,
-                               "--pos", pos_class,
-                               "--neg", neg_class,
-                               "--classifier-type", clf_type,
-                               "--nf", nf,
-                               "--epochs", epochs,
-                               "--batch-size", str(args.batch_size),
-                               "--lr", str(args.lr)],
-                              capture_output=True)
-        for line in proc.stdout.split(b'\n')[-4:-1]:
-            print(line.decode())
-
-    create_and_store_z(
-        args.out_dir_data, args.nz, args.z_dim,
-        config={'seed': seed, 'n_z': args.nz, 'z_dim': args.z_dim})
-
-    subprocess.run(['python3', '-m', 'src.optimization.gasten_multifidelity_optimization_step1',
-                    '--config', args.config_path_optim, '--pos', pos_class, '--neg', neg_class,
-                    '--dataset', args.dataset, '--fid-stats', fid_stats_path])
-
-    classifiers = os.listdir(os.path.join(os.environ['FILESDIR'], 'models', f"{args.dataset}.{pos_class}v{neg_class}"))
-    classifier_paths = ",".join(
-        [f"{os.environ['FILESDIR']}/models/{args.dataset}.{pos_class}v{neg_class}/{classifier}" for classifier in
-         classifiers])
-
-    subprocess.run(['python3', '-m', 'src.optimization.gasten_multifidelity_optimization_step2',
-                    '--config', args.config_path_optim, '--classifiers', classifier_paths, '--pos', pos_class,
-                    '--neg', neg_class, '--dataset', args.dataset, '--fid-stats', fid_stats_path])
+    # print(f"\nGenerating classifiers for {pos_class}v{neg_class} ...")
+    # for clf_type, nf, epochs in itertools.product(l_clf_type, l_nf, l_epochs):
+    #     print("\n", clf_type, nf, epochs)
+    #     proc = subprocess.run(["python3", "-m", "src.classifier.train",
+    #                            "--device", args.device,
+    #                            "--data-dir", args.dataroot,
+    #                            "--out-dir", args.out_dir_models,
+    #                            "--dataset", args.dataset,
+    #                            "--pos", pos_class,
+    #                            "--neg", neg_class,
+    #                            "--classifier-type", clf_type,
+    #                            "--nf", nf,
+    #                            "--epochs", epochs,
+    #                            "--batch-size", str(args.batch_size),
+    #                            "--lr", str(args.lr)],
+    #                           capture_output=True)
+    #     for line in proc.stdout.split(b'\n')[-4:-1]:
+    #         print(line.decode())
+    #
+    # create_and_store_z(
+    #     args.out_dir_data, args.nz, args.z_dim,
+    #     config={'seed': seed, 'n_z': args.nz, 'z_dim': args.z_dim})
+    #
+    # subprocess.run(['python3', '-m', 'src.optimization.gasten_multifidelity_optimization_step1',
+    #                 '--config', args.config_path_optim, '--pos', pos_class, '--neg', neg_class,
+    #                 '--dataset', args.dataset, '--fid-stats', fid_stats_path])
+    #
+    # classifiers = os.listdir(os.path.join(os.environ['FILESDIR'], 'models', f"{args.dataset}.{pos_class}v{neg_class}"))
+    # classifier_paths = ",".join(
+    #     [f"{os.environ['FILESDIR']}/models/{args.dataset}.{pos_class}v{neg_class}/{classifier}" for classifier in
+    #      classifiers])
+    #
+    # subprocess.run(['python3', '-m', 'src.optimization.gasten_multifidelity_optimization_step2',
+    #                 '--config', args.config_path_optim, '--classifiers', classifier_paths, '--pos', pos_class,
+    #                 '--neg', neg_class, '--dataset', args.dataset, '--fid-stats', fid_stats_path])
 
     print("Start clustering")
 
