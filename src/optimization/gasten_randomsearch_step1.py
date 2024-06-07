@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 import wandb
 import math
 import os
-from scipy.stats import uniform, randint
+from scipy.stats import uniform, randint, loguniform
 import time
 
 from src.utils.config import read_config
@@ -94,16 +94,19 @@ def main():
     train_metrics.add('G_loss', iteration_metric=True)
     train_metrics.add('D_loss', iteration_metric=True)
 
-    def random_search(param_distributions, num_iterations, name):
-        best_score = float('inf')
-        time_limit = 3600
-        start_time = time.time()
+    if not os.path.exists(f"{os.environ['FILESDIR']}/random_search_scores_{args.dataset}.{pos_class}v{neg_class}"):
+        os.makedirs(f"{os.environ['FILESDIR']}/random_search_scores_{args.dataset}.{pos_class}v{neg_class}")
 
-        for i in range(num_iterations):
+    def random_search(param_distributions):
+        best_score = float('inf')
+        time_limit = 72000  # Time limit in seconds (1 hour)
+        start_time = time.time()
+        i = 0
+
+        while True:
             params = {param: distribution.rvs() for param, distribution in param_distributions.items()}
 
-            # Replace this part with your model training and evaluation
-            current_score, G, D, g_opt, d_opt, train_state = evaluate_model_with_params(params, i, name)
+            current_score, G, D, g_opt, d_opt, train_state = evaluate_model_with_params(params, i)
 
             if current_score < best_score:
                 best_score = current_score
@@ -121,8 +124,10 @@ def main():
                 print("Time limit reached. Stopping the random search.")
                 break
 
+            i += 1
+
     # Example function to evaluate model with given parameters
-    def evaluate_model_with_params(params, iteration, name):
+    def evaluate_model_with_params(params, iteration):
         config['model']["architecture"]['g_num_blocks'] = params['n_blocks']
         config['model']["architecture"]['d_num_blocks'] = params['n_blocks']
 
@@ -219,13 +224,13 @@ def main():
             param_scores[epoch - 1] = eval_metrics.stats['fid'][epoch - 1]
 
         torch.save(param_scores,
-                   f"{os.environ['FILESDIR']}/random_search_scores/param_scores_random_search_step1_{name}_iteration_{iteration}.pt")
+                   f"{os.environ['FILESDIR']}/random_search_scores_{args.dataset}.{pos_class}v{neg_class}/param_scores_random_search_step1_iteration_{iteration}.pt")
 
         return eval_metrics.stats['fid'][epochs - 2], G, D, g_opt, d_opt, train_state
 
     param_distributions = {
-        'g_lr': uniform(loc=0.0001, scale=0.001),  # Uniform distribution between 0.0001 and 0.001
-        'd_lr': uniform(loc=0.0001, scale=0.001),  # Uniform distribution between 0.0001 and 0.001
+        'g_lr': loguniform(1e-5, 1e-2),  # Logarithmic distribution for learning rates
+        'd_lr': loguniform(1e-5, 1e-2),  # Logarithmic distribution for learning rates
         'g_beta1': uniform(loc=0.1, scale=0.8),  # Uniform distribution between 0.1 and 0.9
         'd_beta1': uniform(loc=0.1, scale=0.8),  # Uniform distribution between 0.1 and 0.9
         'g_beta2': uniform(loc=0.1, scale=0.8),  # Uniform distribution between 0.1 and 0.9
@@ -233,7 +238,7 @@ def main():
         'n_blocks': randint(low=1, high=5),  # Discrete uniform distribution between 1 and 5
     }
 
-    random_search(param_distributions, num_iterations=100, name=f"{args.dataset}_{pos_class}v{neg_class}")
+    random_search(param_distributions)
 
 
 if __name__ == '__main__':

@@ -209,7 +209,7 @@ def main():
     configspace = ConfigurationSpace()
     configspace.add_hyperparameters([G_lr, D_lr, G_beta1, D_beta1, G_beta2, D_beta2, n_blocks])
 
-    scenario = Scenario(configspace, deterministic=True, walltime_limit=3600)
+    scenario = Scenario(configspace, deterministic=True, walltime_limit=72000)
 
     smac = HyperparameterOptimizationFacade(scenario, train, overwrite=True)
     incumbent = smac.optimize()

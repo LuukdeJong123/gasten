@@ -20,6 +20,7 @@ from src.gan.train import train_disc, train_gen, loss_terms_to_str, evaluate
 from src.utils import load_z, create_checkpoint_path, seed_worker
 from src.utils.checkpoint import checkpoint_gan
 
+
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", dest="config_path",
@@ -111,11 +112,14 @@ def main():
     iteration = 0
     param_scores = {}
 
-    time_limit = 3600
+    time_limit = 72000
     start_time = time.time()
     rng = np.random.RandomState(0)
 
-    for params in tqdm(list(ParameterSampler(param_grid, n_iter=100, random_state=rng))):
+    if not os.path.exists(f"{os.environ['FILESDIR']}/grid_search_scores_{args.dataset}.{pos_class}v{neg_class}"):
+        os.makedirs(f"{os.environ['FILESDIR']}/grid_search_scores_{args.dataset}.{pos_class}v{neg_class}")
+
+    for params in tqdm(list(ParameterSampler(param_grid, n_iter=1000, random_state=rng))):
         iteration += 1
         current_score = float('inf')
         config['model']["architecture"]['g_num_blocks'] = params['n_blocks']
@@ -183,7 +187,7 @@ def main():
                     if curr_g_iter % log_every_g_iter == 0 or \
                             curr_g_iter == g_iters_per_epoch:
                         print('[%d/%d][%d/%d]\tG loss: %.4f %s; D loss: %.4f %s'
-                              % (epoch, epochs-1, curr_g_iter, g_iters_per_epoch, g_loss.item(),
+                              % (epoch, epochs - 1, curr_g_iter, g_iters_per_epoch, g_loss.item(),
                                  loss_terms_to_str(g_loss_terms), d_loss.item(),
                                  loss_terms_to_str(d_loss_terms)))
 
@@ -209,8 +213,8 @@ def main():
                      test_noise, device, None)
 
             eval_metrics.finalize_epoch()
-            current_score = eval_metrics.stats['fid'][epoch-1]
-            param_scores[epoch-1] = current_score
+            current_score = eval_metrics.stats['fid'][epoch - 1]
+            param_scores[epoch - 1] = current_score
 
         # Check if the current set of hyperparameters is the best
         if current_score < best_score:
@@ -219,15 +223,17 @@ def main():
             checkpoint_gan(
                 G, D, g_opt, d_opt, train_state,
                 {"eval": eval_metrics.stats, "train": train_metrics.stats}, config, output_dir=config_checkpoint_dir)
-            with open(f'{os.environ["FILESDIR"]}/step-1-best-grid-search-config-{pos_class}v{neg_class}.txt', 'w') as file:
+            with open(f'{os.environ["FILESDIR"]}/step-1-best-grid-search-config-{pos_class}v{neg_class}.txt',
+                      'w') as file:
                 file.write(os.path.join(config_checkpoint_dir))
 
-
-        torch.save(param_scores, f"{os.environ['FILESDIR']}/grid_search_scores_fashion_mnist/param_scores_grid_search_step1_{args.dataset}_{pos_class}v{neg_class}_iteration_{iteration}.pt")
+        torch.save(param_scores,f"{os.environ['FILESDIR']}/grid_search_scores_{args.dataset}.{pos_class}v{neg_class}/param_scores_grid_search_step1_iteration_{iteration}.pt")
 
         elapsed_time = time.time() - start_time
         if elapsed_time > time_limit:
             print("Time limit reached. Stopping the grid search.")
             break
+
+
 if __name__ == '__main__':
     main()

@@ -259,7 +259,7 @@ def main():
 
     objectives = ["fid", "confusion_distance"]
 
-    scenario = Scenario(configspace, objectives=objectives, deterministic=True, walltime_limit=14400, min_budget=2,
+    scenario = Scenario(configspace, objectives=objectives, deterministic=True, walltime_limit=72000, min_budget=2,
                         max_budget=40)
     multi_objective_algorithm = ParEGO(scenario)
     smac = MultiFidelityFacade(scenario, train, multi_objective_algorithm=multi_objective_algorithm, overwrite=True)

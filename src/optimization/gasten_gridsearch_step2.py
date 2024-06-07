@@ -129,17 +129,20 @@ def main():
         'g_beta2': [0.1, 0.5, 0.9],
         'd_beta2': [0.1, 0.5, 0.9],
         'weight': [1, 15, 30],
-        'classifier':  classifier_paths
+        'classifier': classifier_paths
     }
 
     # Training loop with grid search for hyperparameter optimization
     iteration = 0
     param_scores = {}
-    time_limit = 14400
+    time_limit = 72000
     start_time = time.time()
     rng = np.random.RandomState(0)
 
-    for params in tqdm(list(ParameterSampler(param_grid, n_iter=100, random_state=rng))):
+    if not os.path.exists(f"{os.environ['FILESDIR']}/grid_search_scores_{args.dataset}.{pos_class}v{neg_class}"):
+        os.makedirs(f"{os.environ['FILESDIR']}/grid_search_scores_{args.dataset}.{pos_class}v{neg_class}")
+
+    for params in tqdm(list(ParameterSampler(param_grid, n_iter=1000, random_state=rng))):
         iteration += 1
         C, C_params, C_stats, C_args = construct_classifier_from_checkpoint(
             params['classifier'], device=device)
@@ -219,7 +222,7 @@ def main():
                     if curr_g_iter % log_every_g_iter == 0 or \
                             curr_g_iter == g_iters_per_epoch:
                         print('[%d/%d][%d/%d]\tG loss: %.4f %s; D loss: %.4f %s'
-                              % (epoch, epochs-1, curr_g_iter, g_iters_per_epoch, g_loss.item(),
+                              % (epoch, epochs - 1, curr_g_iter, g_iters_per_epoch, g_loss.item(),
                                  loss_terms_to_str(g_loss_terms), d_loss.item(),
                                  loss_terms_to_str(d_loss_terms)))
 
@@ -243,14 +246,17 @@ def main():
                      test_noise, device, None)
 
             eval_metrics.finalize_epoch()
-            current_score = (eval_metrics.stats['fid'][epoch-1], eval_metrics.stats['conf_dist'][epoch-1])
-            param_scores[epoch-1] = current_score
+            current_score = (eval_metrics.stats['fid'][epoch - 1], eval_metrics.stats['conf_dist'][epoch - 1])
+            param_scores[epoch - 1] = current_score
 
-        torch.save(param_scores, f"{os.environ['FILESDIR']}/grid_search_scores_fashion_mnist/param_scores_grid_search_step2_{args.dataset}_{pos_class}v{neg_class}_iteration_{iteration}.pt")
+        torch.save(param_scores,
+                   f"{os.environ['FILESDIR']}/grid_search_scores_{args.dataset}.{pos_class}v{neg_class}/param_scores_grid_search_step2_iteration_{iteration}.pt")
 
         elapsed_time = time.time() - start_time
         if elapsed_time > time_limit:
             print("Time limit reached. Stopping the grid search.")
             break
+
+
 if __name__ == '__main__':
     main()
