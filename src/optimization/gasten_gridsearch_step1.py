@@ -104,7 +104,7 @@ def main():
         'd_beta1': [0.1, 0.5, 0.9],
         'g_beta2': [0.1, 0.5, 0.9],
         'd_beta2': [0.1, 0.5, 0.9],
-        'n_blocks': [3, 4, 5]
+        'n_blocks': [8]
     }
 
     # Training loop with grid search for hyperparameter optimization
@@ -119,11 +119,12 @@ def main():
     if not os.path.exists(f"{os.environ['FILESDIR']}/grid_search_scores_{args.dataset}.{pos_class}v{neg_class}"):
         os.makedirs(f"{os.environ['FILESDIR']}/grid_search_scores_{args.dataset}.{pos_class}v{neg_class}")
 
-    for params in tqdm(list(ParameterSampler(param_grid, n_iter=200, random_state=rng))):
-        iteration += 1
+    parameter_list = list(ParameterSampler(param_grid, n_iter=200, random_state=rng))
+
+    while iteration < len(parameter_list):
         current_score = float('inf')
-        config['model']["architecture"]['g_num_blocks'] = params['n_blocks']
-        config['model']["architecture"]['d_num_blocks'] = params['n_blocks']
+        config['model']["architecture"]['g_num_blocks'] = parameter_list[iteration]['n_blocks']
+        config['model']["architecture"]['d_num_blocks'] = parameter_list[iteration]['n_blocks']
 
         G, D = construct_gan(config["model"], img_size, device)
 
@@ -131,8 +132,8 @@ def main():
         g_updater = UpdateGeneratorGAN(g_crit)
 
         # Initialize optimizers
-        g_opt = Adam(G.parameters(), lr=params['g_lr'], betas=(params['g_beta1'], params['g_beta2']))
-        d_opt = Adam(D.parameters(), lr=params['d_lr'], betas=(params['d_beta1'], params['d_beta2']))
+        g_opt = Adam(G.parameters(), lr=parameter_list[iteration]['g_lr'], betas=(parameter_list[iteration]['g_beta1'], parameter_list[iteration]['g_beta2']))
+        d_opt = Adam(D.parameters(), lr=parameter_list[iteration]['d_lr'], betas=(parameter_list[iteration]['d_beta1'], parameter_list[iteration]['d_beta2']))
 
         train_state = {
             'epoch': 0,
@@ -229,11 +230,12 @@ def main():
 
         torch.save(param_scores,f"{os.environ['FILESDIR']}/grid_search_scores_{args.dataset}.{pos_class}v{neg_class}/param_scores_grid_search_step1_iteration_{iteration}.pt")
 
+
         elapsed_time = time.time() - start_time
         if elapsed_time > time_limit:
             print("Time limit reached. Stopping the grid search.")
             break
-
+        iteration += 1
 
 if __name__ == '__main__':
     main()
