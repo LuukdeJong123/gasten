@@ -55,15 +55,12 @@ class ConvTranspose2dSame(nn.Module):
 
 
 class Generator(nn.Module):
-    def __init__(self, image_size, z_dim=100, n_blocks=3, filter_dim=64, kernel=4, stride=2, padding=0):
+    def __init__(self, image_size, z_dim=100, n_blocks=3, filter_dim=64):
         """
         nz: size of latent code
         ngf: dimension of filters in first convolutional layer
         """
         super(Generator, self).__init__()
-        self.padding = padding
-        self.stride = stride
-        self.kernel = kernel
         self.image_size = image_size
         self.z_dim = z_dim
         self.filter_dim = filter_dim
@@ -73,8 +70,8 @@ class Generator(nn.Module):
         conv_blocks_rev = nn.ModuleList()
 
         for i in range(n_blocks):
-            cur_s_h_smaller = conv_out_size_same(cur_s_h, stride)
-            cur_s_w_smaller = conv_out_size_same(cur_s_w, stride)
+            cur_s_h_smaller = conv_out_size_same(cur_s_h, 2)
+            cur_s_w_smaller = conv_out_size_same(cur_s_w, 2)
 
             if i == 0:
                 block = nn.Sequential(
@@ -82,7 +79,7 @@ class Generator(nn.Module):
                         filter_dim, n_channels,
                         (cur_s_h_smaller, cur_s_w_smaller),
                         (cur_s_h, cur_s_w),
-                        kernel, stride, bias=True),
+                        4, 2, bias=True),
                     nn.Tanh(),
                 )
             else:
@@ -94,7 +91,7 @@ class Generator(nn.Module):
                         in_channels, out_channels,
                         (cur_s_h_smaller, cur_s_w_smaller),
                         (cur_s_h, cur_s_w),
-                        kernel, stride, bias=False),
+                        4, 2, bias=False),
                     nn.BatchNorm2d(out_channels),
                     nn.ReLU(True),
                 )
@@ -110,7 +107,7 @@ class Generator(nn.Module):
             filter_dim * (2 ** (n_blocks - 1)), cur_s_h, cur_s_w)
 
         self.project = nn.Sequential(
-            nn.ConvTranspose2d(self.z_dim, self.project_out_reshape_dim[0], (cur_s_h, cur_s_w), stride, padding, bias=False),
+            nn.ConvTranspose2d(self.z_dim, self.project_out_reshape_dim[0], (cur_s_h, cur_s_w), 1, 0, bias=False),
             nn.BatchNorm2d(self.project_out_reshape_dim[0]),
             nn.ReLU(True),
         )
@@ -132,7 +129,7 @@ class Generator(nn.Module):
 
 
 class Discriminator(nn.Module):
-    def __init__(self, image_size, n_blocks=2, filter_dim=64, use_batch_norm=True, is_critic=False, kernel=4, stride=2, padding_first=0, padding_blocks=1):
+    def __init__(self, image_size, n_blocks=2, filter_dim=64, use_batch_norm=True, is_critic=False):
         super(Discriminator, self).__init__()
         self.image_size = image_size
         self.filter_dim = filter_dim
@@ -150,13 +147,13 @@ class Discriminator(nn.Module):
             if i == 0:
                 in_channels = n_channels
                 block = nn.Sequential(
-                    nn.Conv2d(in_channels, out_channels, kernel, stride, padding_blocks, bias=True),
+                    nn.Conv2d(in_channels, out_channels, 4, 2, 1, bias=True),
                     nn.LeakyReLU(0.2, inplace=True)
                 )
             else:
                 in_channels = filter_dim * 2 ** (i - 1)
                 block = nn.Sequential(
-                    nn.Conv2d(in_channels, out_channels, kernel, stride, padding_blocks, bias=False),
+                    nn.Conv2d(in_channels, out_channels, 4, 2, 1, bias=False),
                     nn.BatchNorm2d(
                         out_channels) if use_batch_norm else nn.LayerNorm([out_channels, cur_s_h, cur_s_w]),
                     nn.LeakyReLU(0.2, inplace=True)
@@ -166,7 +163,7 @@ class Discriminator(nn.Module):
 
         self.predict = nn.Sequential(
             # (b, ndf * 2, 7, 7)
-            nn.Conv2d(filter_dim * 2 ** (n_blocks - 1), 1, (cur_s_h, cur_s_w), stride, padding_first, bias=False),
+            nn.Conv2d(filter_dim * 2 ** (n_blocks - 1), 1, (cur_s_h, cur_s_w), 1, 0, bias=False),
             nn.Flatten(),
             # (b, 1)
         )

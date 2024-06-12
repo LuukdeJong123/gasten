@@ -103,7 +103,7 @@ def main():
         'd_beta1': [0.1, 0.5, 0.9],
         'g_beta2': [0.1, 0.5, 0.9],
         'd_beta2': [0.1, 0.5, 0.9],
-        'n_blocks': [3,4,5]
+        'n_blocks': [3, 4, 5]
     }
 
     # Training loop with grid search for hyperparameter optimization
@@ -131,8 +131,10 @@ def main():
         g_updater = UpdateGeneratorGAN(g_crit)
 
         # Initialize optimizers
-        g_opt = Adam(G.parameters(), lr=parameter_list[iteration]['g_lr'], betas=(parameter_list[iteration]['g_beta1'], parameter_list[iteration]['g_beta2']))
-        d_opt = Adam(D.parameters(), lr=parameter_list[iteration]['d_lr'], betas=(parameter_list[iteration]['d_beta1'], parameter_list[iteration]['d_beta2']))
+        g_opt = Adam(G.parameters(), lr=parameter_list[iteration]['g_lr'],
+                     betas=(parameter_list[iteration]['g_beta1'], parameter_list[iteration]['g_beta2']))
+        d_opt = Adam(D.parameters(), lr=parameter_list[iteration]['d_lr'],
+                     betas=(parameter_list[iteration]['d_beta1'], parameter_list[iteration]['d_beta2']))
 
         train_state = {
             'epoch': 0,
@@ -227,14 +229,15 @@ def main():
                       'w') as file:
                 file.write(os.path.join(config_checkpoint_dir))
 
-        torch.save(param_scores,f"{os.environ['FILESDIR']}/grid_search_scores_{args.dataset}.{pos_class}v{neg_class}/param_scores_grid_search_step1_iteration_{iteration}.pt")
-
+        torch.save(param_scores,
+                   f"{os.environ['FILESDIR']}/grid_search_scores_{args.dataset}.{pos_class}v{neg_class}/param_scores_grid_search_step1_iteration_{iteration}.pt")
 
         elapsed_time = time.time() - start_time
         if elapsed_time > time_limit:
             print("Time limit reached. Stopping the grid search.")
             break
         iteration += 1
+
 
 if __name__ == '__main__':
     main()
