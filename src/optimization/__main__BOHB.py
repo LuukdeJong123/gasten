@@ -78,14 +78,14 @@ def main():
                     '--config', args.config_path_optim, '--pos', pos_class, '--neg', neg_class,
                     '--dataset', args.dataset, '--fid-stats', fid_stats_path])
 
-    classifiers = os.listdir(os.path.join(os.environ['FILESDIR'], 'models', f"{args.dataset}.{pos_class}v{neg_class}"))
-    classifier_paths = ",".join(
-        [f"{os.environ['FILESDIR']}/models/{args.dataset}.{pos_class}v{neg_class}/{classifier}" for classifier in
-         classifiers])
-
-    subprocess.run(['python3', '-m', 'src.optimization.gasten_multifidelity_optimization_step2',
-                    '--config', args.config_path_optim, '--classifiers', classifier_paths, '--pos', pos_class,
-                    '--neg', neg_class, '--dataset', args.dataset, '--fid-stats', fid_stats_path])
+    # classifiers = os.listdir(os.path.join(os.environ['FILESDIR'], 'models', f"{args.dataset}.{pos_class}v{neg_class}"))
+    # classifier_paths = ",".join(
+    #     [f"{os.environ['FILESDIR']}/models/{args.dataset}.{pos_class}v{neg_class}/{classifier}" for classifier in
+    #      classifiers])
+    #
+    # subprocess.run(['python3', '-m', 'src.optimization.gasten_multifidelity_optimization_step2',
+    #                 '--config', args.config_path_optim, '--classifiers', classifier_paths, '--pos', pos_class,
+    #                 '--neg', neg_class, '--dataset', args.dataset, '--fid-stats', fid_stats_path])
 
 
 if __name__ == '__main__':

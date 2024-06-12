@@ -99,7 +99,7 @@ def main():
 
     def random_search(param_distributions):
         best_score = float('inf')
-        time_limit = 72000  # Time limit in seconds (1 hour)
+        time_limit = 72000
         start_time = time.time()
         i = 0
 
