@@ -2,7 +2,6 @@ import os
 from schema import Schema, Optional, And, Or
 from src.datasets import valid_dataset
 
-
 CONFIG_SCHEMA_GASTEN = Schema({
     "project": str,
     "name": str,
@@ -30,6 +29,12 @@ CONFIG_SCHEMA_GASTEN = Schema({
             Optional("g_num_blocks"): int,
             Optional("d_num_blocks"): int,
         }, {
+            "name": "dcgan-v2",
+            "g_filter_dim": int,
+            "d_filter_dim": int,
+            "g_num_blocks": int,
+            "d_num_blocks": int,
+        }, {
             "name": "resnet",
             "g_filter_dim": int,
             "d_filter_dim": int,
@@ -43,7 +48,7 @@ CONFIG_SCHEMA_GASTEN = Schema({
             "name": "ns"
         })
     },
-     Optional("optimizer"): {
+    Optional("optimizer"): {
         "lr": float,
         "beta1": Or(float, int),
         "beta2": Or(float, int),
@@ -99,14 +104,14 @@ CONFIG_SCHEMA_CLUSTERING = Schema({
             "step-2": int
         },
     },
-    "clustering":{
-      "z-dim": int,
+    "clustering": {
+        "z-dim": int,
         "fixed-noise": int,
         "acd": float,
         "n-iter": int,
         Optional("options"): [{
             "dim-reduction": Or("umap", "tsne"),
-            "clustering":  Or("hdbscan", "gmm")
+            "clustering": Or("hdbscan", "gmm")
         }]
     },
     "prototypes": {
