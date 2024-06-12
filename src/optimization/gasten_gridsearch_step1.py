@@ -118,7 +118,7 @@ def main():
     if not os.path.exists(f"{os.environ['FILESDIR']}/grid_search_scores_{args.dataset}.{pos_class}v{neg_class}"):
         os.makedirs(f"{os.environ['FILESDIR']}/grid_search_scores_{args.dataset}.{pos_class}v{neg_class}")
 
-    parameter_list = list(ParameterSampler(param_grid, n_iter=200, random_state=rng))
+    parameter_list = list(ParameterSampler(param_grid, n_iter=500, random_state=rng))
 
     while iteration < len(parameter_list):
         current_score = float('inf')
