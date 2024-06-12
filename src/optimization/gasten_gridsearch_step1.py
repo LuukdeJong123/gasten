@@ -1,7 +1,6 @@
 import torch
 from torch.optim import Adam
 from sklearn.model_selection import ParameterSampler
-from tqdm import tqdm
 import argparse
 from dotenv import load_dotenv
 import wandb
@@ -104,7 +103,7 @@ def main():
         'd_beta1': [0.1, 0.5, 0.9],
         'g_beta2': [0.1, 0.5, 0.9],
         'd_beta2': [0.1, 0.5, 0.9],
-        'n_blocks': [8]
+        'n_blocks': [3,4,5]
     }
 
     # Training loop with grid search for hyperparameter optimization
