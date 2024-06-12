@@ -104,7 +104,7 @@ def main():
         'd_beta1': [0.1, 0.5, 0.9],
         'g_beta2': [0.1, 0.5, 0.9],
         'd_beta2': [0.1, 0.5, 0.9],
-        'n_blocks': [3, 4, 5]
+        'n_blocks': [7]
     }
 
     # Training loop with grid search for hyperparameter optimization
@@ -122,8 +122,8 @@ def main():
     for params in tqdm(list(ParameterSampler(param_grid, n_iter=1000, random_state=rng))):
         iteration += 1
         current_score = float('inf')
-        config['model']["architecture"]['g_num_blocks'] = 7
-        config['model']["architecture"]['d_num_blocks'] = 7
+        config['model']["architecture"]['g_num_blocks'] = params['n_blocks']
+        config['model']["architecture"]['d_num_blocks'] = params['n_blocks']
 
         G, D = construct_gan(config["model"], img_size, device)
 
