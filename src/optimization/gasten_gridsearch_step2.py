@@ -142,7 +142,7 @@ def main():
     if not os.path.exists(f"{os.environ['FILESDIR']}/grid_search_scores_{args.dataset}.{pos_class}v{neg_class}"):
         os.makedirs(f"{os.environ['FILESDIR']}/grid_search_scores_{args.dataset}.{pos_class}v{neg_class}")
 
-    for params in tqdm(list(ParameterSampler(param_grid, n_iter=1000, random_state=rng))):
+    for params in tqdm(list(ParameterSampler(param_grid, n_iter=200, random_state=rng))):
         iteration += 1
         C, C_params, C_stats, C_args = construct_classifier_from_checkpoint(
             params['classifier'], device=device)
