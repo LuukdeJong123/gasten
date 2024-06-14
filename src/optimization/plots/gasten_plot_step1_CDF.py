@@ -32,9 +32,7 @@ for filename in os.listdir(directory_rs):
     if filename.endswith(".pt"):
         filepath = os.path.join(directory_rs, filename)
         data = torch.load(filepath)
-        print(data)
-        random_search_scores.extend(data.values())
-        break
+        random_search_scores.append(list(data.values()))
 
 grid_search_scores = []
 directory_gs = f"{os.environ['FILESDIR']}/grid_search_scores_{args.dataset}.{args.pos_class}v{args.neg_class}"
@@ -43,9 +41,9 @@ for filename in os.listdir(directory_gs):
     if filename.endswith(".pt"):
         filepath = os.path.join(directory_gs, filename)
         data = torch.load(filepath)
-        print(data)
-        grid_search_scores.extend(data.values())
-        break
+        grid_search_scores.append(list(data.values()))
+
+print(grid_search_scores[0])
 
 bayesian_directory = f"{os.environ['FILESDIR']}/out/bayesian_{args.dataset}-{args.pos_class}v{args.neg_class}/optimization"
 bayesian_directories = get_immediate_subdirectories(bayesian_directory)
@@ -102,21 +100,17 @@ for sub_subdirectory in BOHB_sub_subdirectories:
 def compute_cdf(data):
     data_sorted = np.sort(data)
     cdf = np.arange(1, len(data_sorted) + 1) / len(data_sorted)
-    return data_sorted, cdf
-
+    threshold_value = np.percentile(data_sorted, 50)  # 50% threshold
+    percentage_above_threshold = 1 - cdf[np.searchsorted(data_sorted, threshold_value)]
+    return data_sorted, percentage_above_threshold
 
 plt.figure(figsize=(10, 6))
 
-
 def plot_results(results, label):
     for result in results:
-        if isinstance(result, (list, np.ndarray)) and len(result) > 0:  # Check if result is a list or array and non-empty
-            sorted_data, cdf = compute_cdf(result)
-            plt.plot(sorted_data, cdf, label=f'{label}')
+        sorted_data, percentage_above_threshold = compute_cdf(result)
+        plt.plot(sorted_data, np.full_like(sorted_data, percentage_above_threshold), label=f'{label}')
 
-
-print(random_search_scores[0])
-print(grid_search_scores[0])
 
 plot_results(random_search_scores, 'Random Search')
 plot_results(grid_search_scores, 'Grid Search')
