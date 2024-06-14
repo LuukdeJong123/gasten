@@ -96,8 +96,9 @@ for sub_subdirectory in BOHB_sub_subdirectories:
 
 plt.figure(figsize=(10, 5))
 box = plt.boxplot(
-    [grid_search_scores, random_search_scores, bayesian_optimization_scores, hyperband_optimization_scores,
-     BOHB_optimization_scores],
+    [np.hstack(grid_search_scores), np.hstack(random_search_scores),
+     np.hstack(bayesian_optimization_scores), np.hstack(hyperband_optimization_scores),
+     np.hstack(BOHB_optimization_scores)],
     labels=['Grid Search', 'Random Search', 'Bayesian Optimization', 'Hyperband', 'BOHB'])
 
 plt.ylabel('FID Score')
