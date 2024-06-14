@@ -42,52 +42,56 @@ for filename in os.listdir(directory_rs):
         data = torch.load(filepath)
         grid_search_scores.append(data)
 
-bayesian_directory = f"{os.environ['FILESDIR']}/out/bayesian_{args.dataset}-{args.pos_class}v{args.neg_class}"
-
+bayesian_directory = f"{os.environ['FILESDIR']}/out/bayesian_{args.dataset}-{args.pos_class}v{args.neg_class}/optimization"
 bayesian_directories = get_immediate_subdirectories(bayesian_directory)
-bayesian_directories.sort()
-bayesian_second_subdirectory = bayesian_directories[1]
-
-bayesian_second_subdirectory_path = os.path.join(bayesian_directory, bayesian_second_subdirectory)
+bayesian_second_subdirectory_path = os.path.join(bayesian_directory, bayesian_directories[0])
+bayesian_sub_subdirectories = get_immediate_subdirectories(bayesian_second_subdirectory_path)
 
 bayesian_optimization_scores = []
-bayesian_stats_file_path = os.path.join(bayesian_second_subdirectory_path, "stats.json")
-with open(bayesian_stats_file_path) as json_file:
-    json_data = json.load(json_file)
-    scores = json_data['eval']['fid']
-    bayesian_optimization_scores.extend(scores)
+for sub_subdirectory in bayesian_sub_subdirectories:
+    sub_subdirectory_path = os.path.join(bayesian_second_subdirectory_path, sub_subdirectory)
+    for root, dirs, files in os.walk(sub_subdirectory_path):
+        for file in files:
+            if file == "stats.json":
+                json_file_path = os.path.join(root, file)
+                with open(json_file_path) as json_file:
+                    json_data = json.load(json_file)
+                    scores = json_data['eval']['fid']
+                    bayesian_optimization_scores.append(scores)
 
-hyperband_directory = f"{os.environ['FILESDIR']}/out/hyperband_{args.dataset}-{args.pos_class}v{args.neg_class}/"
-
+hyperband_directory = f"{os.environ['FILESDIR']}/out/hyperband_{args.dataset}-{args.pos_class}v{args.neg_class}/optimization"
 hyperband_directories = get_immediate_subdirectories(hyperband_directory)
-hyperband_directories.sort()
-hyperband_second_subdirectory = hyperband_directories[1]
-
-hyperband_second_subdirectory_path = os.path.join(hyperband_directory, hyperband_second_subdirectory)
-
-hpyerband_optimization_scores = []
-hpyerband_stats_file_path = os.path.join(hyperband_second_subdirectory_path, "stats.json")
-with open(hpyerband_stats_file_path) as json_file:
-    json_data = json.load(json_file)
-    scores = json_data['eval']['fid']
-    hpyerband_optimization_scores.extend(scores)
+hyperband_second_subdirectory_path = os.path.join(hyperband_directory, hyperband_directories[0])
+hyperband_sub_subdirectories = get_immediate_subdirectories(hyperband_second_subdirectory_path)
 
 hyperband_optimization_scores = []
+for sub_subdirectory in hyperband_sub_subdirectories:
+    sub_subdirectory_path = os.path.join(hyperband_second_subdirectory_path, sub_subdirectory)
+    for root, dirs, files in os.walk(sub_subdirectory_path):
+        for file in files:
+            if file == "stats.json":
+                json_file_path = os.path.join(root, file)
+                with open(json_file_path) as json_file:
+                    json_data = json.load(json_file)
+                    scores = json_data['eval']['fid']
+                    hyperband_optimization_scores.append(scores)
 
-BOHB_directory = f"{os.environ['FILESDIR']}/out/BOHB_{args.dataset}-{args.pos_class}v{args.neg_class}/"
-
+BOHB_directory = f"{os.environ['FILESDIR']}/out/BOHB_{args.dataset}-{args.pos_class}v{args.neg_class}/optimization"
 BOHB_directories = get_immediate_subdirectories(BOHB_directory)
-BOHB_directories.sort()
-BOHB_second_subdirectory = BOHB_directories[1]
-
-BOHB_second_subdirectory_path = os.path.join(BOHB_directory, BOHB_second_subdirectory)
+BOHB_second_subdirectory_path = os.path.join(BOHB_directory, BOHB_directories[0])
+BOHB_sub_subdirectories = get_immediate_subdirectories(BOHB_second_subdirectory_path)
 
 BOHB_optimization_scores = []
-BOHB_stats_file_path = os.path.join(BOHB_second_subdirectory_path, "stats.json")
-with open(BOHB_stats_file_path) as json_file:
-    json_data = json.load(json_file)
-    scores = json_data['eval']['fid']
-    BOHB_optimization_scores.extend(scores)
+for sub_subdirectory in BOHB_sub_subdirectories:
+    sub_subdirectory_path = os.path.join(BOHB_second_subdirectory_path, sub_subdirectory)
+    for root, dirs, files in os.walk(sub_subdirectory_path):
+        for file in files:
+            if file == "stats.json":
+                json_file_path = os.path.join(root, file)
+                with open(json_file_path) as json_file:
+                    json_data = json.load(json_file)
+                    scores = json_data['eval']['fid']
+                    BOHB_optimization_scores.append(scores)
 
 
 # Prepare data for CDF plot
@@ -123,5 +127,5 @@ plt.xlabel('FID Score')
 plt.ylabel('Cumulative Probability')
 plt.title('CDF of Best FID Scores for MNIST 8v0: Step 1')
 plt.legend()
-plt.savefig('MNIST_8v0_cdf_best_step1_50_percent_threshold.png')
+plt.savefig('MNIST_8v0_cdf_step1.png')
 plt.show()
