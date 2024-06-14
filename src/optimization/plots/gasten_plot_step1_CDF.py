@@ -21,6 +21,7 @@ def parse_args():
 def get_immediate_subdirectories(directory):
     return [name for name in os.listdir(directory) if os.path.isdir(os.path.join(directory, name))]
 
+
 load_dotenv()
 args = parse_args()
 
@@ -36,9 +37,9 @@ for filename in os.listdir(directory_rs):
 grid_search_scores = []
 directory_gs = f"{os.environ['FILESDIR']}/grid_search_scores_{args.dataset}.{args.pos_class}v{args.neg_class}"
 # Loop through all the files in the directory
-for filename in os.listdir(directory_rs):
+for filename in os.listdir(directory_gs):
     if filename.endswith(".pt"):
-        filepath = os.path.join(directory_rs, filename)
+        filepath = os.path.join(directory_gs, filename)
         data = torch.load(filepath)
         grid_search_scores.extend(data.values())
 
@@ -94,38 +95,30 @@ for sub_subdirectory in BOHB_sub_subdirectories:
                     BOHB_optimization_scores.append(scores)
 
 
-# Prepare data for CDF plot
-def prepare_cdf_data(scores):
-    sorted_scores = np.sort(scores)
-    cdf = np.arange(1, len(sorted_scores) + 1) / len(sorted_scores)
-    return sorted_scores, cdf
+def compute_cdf(data):
+    data_sorted = np.sort(data)
+    cdf = np.arange(1, len(data_sorted) + 1) / len(data_sorted)
+    return data_sorted, cdf
 
 
-# Get CDF data
-grid_search_cdf_x, grid_search_cdf_y = prepare_cdf_data(grid_search_scores)
-random_search_cdf_x, random_search_cdf_y = prepare_cdf_data(random_search_scores)
-bayesian_optimization_cdf_x, bayesian_optimization_cdf_y = prepare_cdf_data(bayesian_optimization_scores)
-hyperband_optimization_cdf_x, hyperband_optimization_cdf_y = prepare_cdf_data(hyperband_optimization_scores)
-BOHB_optimization_cdf_x, BOHB_optimization_cdf_y = prepare_cdf_data(BOHB_optimization_scores)
+plt.figure(figsize=(10, 6))
 
-# Plot 1: CDF Plot with 50% Threshold
-plt.figure(figsize=(10, 5))
-plt.plot(grid_search_cdf_x, grid_search_cdf_y, label='Grid Search')
-plt.plot(random_search_cdf_x, random_search_cdf_y, label='Random Search')
-plt.plot(bayesian_optimization_cdf_x, bayesian_optimization_cdf_y, label='Bayesian Optimization')
-plt.plot(hyperband_optimization_cdf_x, hyperband_optimization_cdf_y, label='Hyperband')
-plt.plot(BOHB_optimization_cdf_x, BOHB_optimization_cdf_y, label='BOHB')
 
-# 50% Threshold line
-plt.axhline(y=0.50, color='r', linestyle='--', label='50% Threshold')
+def plot_results(results, label):
+    for result in results:
+        sorted_data, cdf = compute_cdf(result)
+        plt.plot(sorted_data, cdf, label=f'{label}')
 
-# Calculate corresponding value for the 50% threshold
-threshold_value_50 = np.interp(0.50, bayesian_optimization_cdf_y, bayesian_optimization_cdf_x)
-plt.plot(threshold_value_50, 0.50, 'ro')  # Red dot for intersection
 
-plt.xlabel('FID Score')
+plot_results(random_search_scores, 'Random Search')
+plot_results(grid_search_scores, 'Grid Search')
+plot_results(bayesian_optimization_scores, 'Bayesian Optimization')
+plot_results(hyperband_optimization_scores, 'Hyperband')
+plot_results(BOHB_optimization_scores, 'BOHB')
+
+plt.title('CDF of HPO Techniques')
+plt.xlabel('Objective Function Value')
 plt.ylabel('Cumulative Probability')
-plt.title('CDF of Best FID Scores for MNIST 8v0: Step 1')
 plt.legend()
-plt.savefig('MNIST_8v0_cdf_step1.png')
+plt.grid(True)
 plt.show()

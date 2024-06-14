@@ -37,7 +37,6 @@ args = parse_args()
 
 random_search_scores = []
 directory_rs = f"{os.environ['FILESDIR']}/random_search_scores_{args.dataset}.{args.pos_class}v{args.neg_class}"
-# Loop through all the files in the directory
 for filename in os.listdir(directory_rs):
     if filename.endswith(".pt"):
         filepath = os.path.join(directory_rs, filename)
@@ -46,10 +45,9 @@ for filename in os.listdir(directory_rs):
 
 grid_search_scores = []
 directory_gs = f"{os.environ['FILESDIR']}/grid_search_scores_{args.dataset}.{args.pos_class}v{args.neg_class}"
-# Loop through all the files in the directory
-for filename in os.listdir(directory_rs):
+for filename in os.listdir(directory_gs):
     if filename.endswith(".pt"):
-        filepath = os.path.join(directory_rs, filename)
+        filepath = os.path.join(directory_gs, filename)
         data = torch.load(filepath)
         grid_search_scores.extend(data.values())
 
