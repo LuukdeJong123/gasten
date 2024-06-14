@@ -46,12 +46,10 @@ for filename in os.listdir(directory_rs):
         grid_search_scores.append(max_value)
 
 bayesian_directory = f"{os.environ['FILESDIR']}/out/bayesian_{args.dataset}-{args.pos_class}v{args.neg_class}/optimization"
-
 bayesian_directories = get_immediate_subdirectories(bayesian_directory)
 bayesian_second_subdirectory_path = os.path.join(bayesian_directory, bayesian_directories[0])
-
 bayesian_sub_subdirectories = get_immediate_subdirectories(bayesian_second_subdirectory_path)
-print(bayesian_sub_subdirectories)
+
 bayesian_optimization_scores = []
 for sub_subdirectory in bayesian_sub_subdirectories:
     sub_subdirectory_path = os.path.join(bayesian_second_subdirectory_path, sub_subdirectory)
@@ -59,8 +57,10 @@ for sub_subdirectory in bayesian_sub_subdirectories:
         for file in files:
             if file.endswith(".json"):
                 json_file_path = os.path.join(root, file)
+                print(json_file_path)
                 with open(json_file_path) as json_file:
                     json_data = json.load(json_file)
+                    print(json_data)
                     scores = json_data['eval']['fid']
                     best_score = max(scores)
                     bayesian_optimization_scores.append(best_score)
