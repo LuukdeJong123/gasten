@@ -55,49 +55,49 @@ for sub_subdirectory in bayesian_sub_subdirectories:
     sub_subdirectory_path = os.path.join(bayesian_second_subdirectory_path, sub_subdirectory)
     for root, dirs, files in os.walk(sub_subdirectory_path):
         for file in files:
-            if file.endswith(".json"):
+            if file == "stats.json":
                 json_file_path = os.path.join(root, file)
-                print(json_file_path)
                 with open(json_file_path) as json_file:
                     json_data = json.load(json_file)
-                    print(json_data)
                     scores = json_data['eval']['fid']
                     best_score = max(scores)
                     bayesian_optimization_scores.append(best_score)
 
-hyperband_directory = f"{os.environ['FILESDIR']}/out/hyperband_{args.dataset}-{args.pos_class}v{args.neg_class}/"
-
+hyperband_directory = f"{os.environ['FILESDIR']}/out/hyperband_{args.dataset}-{args.pos_class}v{args.neg_class}/optimization"
 hyperband_directories = get_immediate_subdirectories(hyperband_directory)
-hyperband_directories.sort()
-hyperband_second_subdirectory = hyperband_directories[1]
-
-hyperband_second_subdirectory_path = os.path.join(hyperband_directory, hyperband_second_subdirectory)
-
-hpyerband_optimization_scores = []
-hpyerband_stats_file_path = os.path.join(hyperband_second_subdirectory_path, "stats.json")
-with open(hpyerband_stats_file_path) as json_file:
-    json_data = json.load(json_file)
-    scores = json_data['eval']['fid']
-    best_score = max(scores)
-    hpyerband_optimization_scores.extend(best_score)
+hyperband_second_subdirectory_path = os.path.join(hyperband_directory, hyperband_directories[0])
+hyperband_sub_subdirectories = get_immediate_subdirectories(hyperband_second_subdirectory_path)
 
 hyperband_optimization_scores = []
+for sub_subdirectory in hyperband_sub_subdirectories:
+    sub_subdirectory_path = os.path.join(hyperband_second_subdirectory_path, sub_subdirectory)
+    for root, dirs, files in os.walk(sub_subdirectory_path):
+        for file in files:
+            if file == "stats.json":
+                json_file_path = os.path.join(root, file)
+                with open(json_file_path) as json_file:
+                    json_data = json.load(json_file)
+                    scores = json_data['eval']['fid']
+                    best_score = max(scores)
+                    hyperband_optimization_scores.append(best_score)
 
-BOHB_directory = f"{os.environ['FILESDIR']}/out/BOHB_{args.dataset}-{args.pos_class}v{args.neg_class}/"
-
+BOHB_directory = f"{os.environ['FILESDIR']}/out/BOHB_{args.dataset}-{args.pos_class}v{args.neg_class}/optimization"
 BOHB_directories = get_immediate_subdirectories(BOHB_directory)
-BOHB_directories.sort()
-BOHB_second_subdirectory = BOHB_directories[1]
-
-BOHB_second_subdirectory_path = os.path.join(BOHB_directory, BOHB_second_subdirectory)
+BOHB_second_subdirectory_path = os.path.join(BOHB_directory, BOHB_directories[0])
+BOHB_sub_subdirectories = get_immediate_subdirectories(BOHB_second_subdirectory_path)
 
 BOHB_optimization_scores = []
-BOHB_stats_file_path = os.path.join(BOHB_second_subdirectory_path, "stats.json")
-with open(BOHB_stats_file_path) as json_file:
-    json_data = json.load(json_file)
-    scores = json_data['eval']['fid']
-    best_score = max(scores)
-    BOHB_optimization_scores.extend(best_score)
+for sub_subdirectory in BOHB_sub_subdirectories:
+    sub_subdirectory_path = os.path.join(BOHB_second_subdirectory_path, sub_subdirectory)
+    for root, dirs, files in os.walk(sub_subdirectory_path):
+        for file in files:
+            if file == "stats.json":
+                json_file_path = os.path.join(root, file)
+                with open(json_file_path) as json_file:
+                    json_data = json.load(json_file)
+                    scores = json_data['eval']['fid']
+                    best_score = max(scores)
+                    BOHB_optimization_scores.append(best_score)
 
 
 # Plot 1: Convergence Plot
