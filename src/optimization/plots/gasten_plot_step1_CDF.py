@@ -108,15 +108,11 @@ def plot_results(results, label):
     for result in results:
         if isinstance(result, (list, np.ndarray)) and len(result) > 0:  # Check if result is a list or array and non-empty
             sorted_data, cdf = compute_cdf(result)
-            print(f'Plotting {label}: sorted_data={sorted_data}, cdf={cdf}')  # Debugging statement
             plt.plot(sorted_data, cdf, label=f'{label}')
 
-# Print the lengths of the lists to debug
-print(f'random_search_scores: {len(random_search_scores)}')
-print(f'grid_search_scores: {len(grid_search_scores)}')
-print(f'bayesian_optimization_scores: {len(bayesian_optimization_scores)}')
-print(f'hyperband_optimization_scores: {len(hyperband_optimization_scores)}')
-print(f'BOHB_optimization_scores: {len(BOHB_optimization_scores)}')
+
+print(random_search_scores[0])
+print(grid_search_scores[0])
 
 plot_results(random_search_scores, 'Random Search')
 plot_results(grid_search_scores, 'Grid Search')
@@ -129,4 +125,4 @@ plt.xlabel('Objective Function Value')
 plt.ylabel('Cumulative Probability')
 plt.legend()
 plt.grid(True)
-plt.show()
+plt.savefig('MNIST_8v0_CDF_step1.png')
