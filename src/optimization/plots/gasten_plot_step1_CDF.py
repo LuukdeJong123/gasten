@@ -4,6 +4,7 @@ import os
 import torch
 import numpy as np
 import argparse
+from dotenv import load_dotenv
 
 
 def parse_args():
@@ -20,7 +21,7 @@ def parse_args():
 def get_immediate_subdirectories(directory):
     return [name for name in os.listdir(directory) if os.path.isdir(os.path.join(directory, name))]
 
-
+load_dotenv()
 args = parse_args()
 
 random_search_scores = []

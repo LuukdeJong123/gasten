@@ -4,6 +4,8 @@ import os
 import torch
 import numpy as np
 import argparse
+from dotenv import load_dotenv
+
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -20,6 +22,7 @@ def get_immediate_subdirectories(directory):
     return [name for name in os.listdir(directory) if os.path.isdir(os.path.join(directory, name))]
 
 
+load_dotenv()
 args = parse_args()
 
 random_search_scores = []
@@ -87,14 +90,15 @@ with open(BOHB_stats_file_path) as json_file:
     scores = json_data['eval']['fid']
     BOHB_optimization_scores.extend(scores)
 
-
 plt.figure(figsize=(10, 5))
 box = plt.boxplot(
-    [grid_search_scores, random_search_scores, bayesian_optimization_scores, hyperband_optimization_scores, BOHB_optimization_scores],
+    [grid_search_scores, random_search_scores, bayesian_optimization_scores, hyperband_optimization_scores,
+     BOHB_optimization_scores],
     labels=['Grid Search', 'Random Search', 'Bayesian Optimization', 'Hyperband', 'BOHB'])
 
 plt.ylabel('FID Score')
 plt.title('Boxplot of FID Scores for MNIST 8v0: Step 1')
+
 
 def annotate_boxplot(boxplot, data):
     for i, d in enumerate(data, 1):
@@ -103,6 +107,9 @@ def annotate_boxplot(boxplot, data):
         plt.annotate(f'{min_val:.2f}', xy=(i, min_val), xytext=(i - 0.25, min_val - 10), ha='center', color='blue')
         plt.annotate(f'{max_val:.2f}', xy=(i, max_val), xytext=(i + 0.25, max_val + 10), ha='center', color='red')
 
-annotate_boxplot(box, [grid_search_scores, random_search_scores, bayesian_optimization_scores, hyperband_optimization_scores, BOHB_optimization_scores])
+
+annotate_boxplot(box,
+                 [grid_search_scores, random_search_scores, bayesian_optimization_scores, hyperband_optimization_scores,
+                  BOHB_optimization_scores])
 
 plt.savefig('MNIST_8v0_boxplot_step1.png')
