@@ -23,7 +23,13 @@ def get_immediate_subdirectories(directory):
 
 
 def flatten_scores(scores):
-    return [item for sublist in scores for item in sublist]
+    flattened = []
+    for sublist in scores:
+        if isinstance(sublist, (list, np.ndarray)):
+            flattened.extend(sublist)
+        else:
+            flattened.append(sublist)
+    return flattened
 
 
 load_dotenv()
