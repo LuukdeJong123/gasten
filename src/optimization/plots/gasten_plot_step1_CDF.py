@@ -106,8 +106,9 @@ plt.figure(figsize=(10, 6))
 
 def plot_results(results, label):
     for result in results:
-        sorted_data, cdf = compute_cdf(result)
-        plt.plot(sorted_data, cdf, label=f'{label}')
+        if isinstance(result, (list, np.ndarray)) and len(result) > 0:  # Check if result is a list or array and non-empty
+            sorted_data, cdf = compute_cdf(result)
+            plt.plot(sorted_data, cdf, label=f'{label}')
 
 
 plot_results(random_search_scores, 'Random Search')
