@@ -45,7 +45,7 @@ for filename in os.listdir(directory_rs):
         max_value = data[max_key]
         grid_search_scores.append(max_value)
 
-bayesian_directory = f"{os.environ['FILESDIR']}/tools/bayesian_{args.dataset}-{args.pos_class}v{args.neg_class}"
+bayesian_directory = f"{os.environ['FILESDIR']}/out/bayesian_{args.dataset}-{args.pos_class}v{args.neg_class}"
 
 bayesian_directories = get_immediate_subdirectories(bayesian_directory)
 bayesian_directories.sort()
@@ -61,7 +61,7 @@ with open(bayesian_stats_file_path) as json_file:
     best_score = max(scores)
     bayesian_optimization_scores.append(best_score)
 
-hyperband_directory = f"{os.environ['FILESDIR']}/tools/hyperband_{args.dataset}-{args.pos_class}v{args.neg_class}/"
+hyperband_directory = f"{os.environ['FILESDIR']}/out/hyperband_{args.dataset}-{args.pos_class}v{args.neg_class}/"
 
 hyperband_directories = get_immediate_subdirectories(hyperband_directory)
 hyperband_directories.sort()
@@ -79,7 +79,7 @@ with open(hpyerband_stats_file_path) as json_file:
 
 hyperband_optimization_scores = []
 
-BOHB_directory = f"{os.environ['FILESDIR']}/tools/BOHB_{args.dataset}-{args.pos_class}v{args.neg_class}/"
+BOHB_directory = f"{os.environ['FILESDIR']}/out/BOHB_{args.dataset}-{args.pos_class}v{args.neg_class}/"
 
 BOHB_directories = get_immediate_subdirectories(BOHB_directory)
 BOHB_directories.sort()
