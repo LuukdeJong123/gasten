@@ -22,6 +22,10 @@ def get_immediate_subdirectories(directory):
     return [name for name in os.listdir(directory) if os.path.isdir(os.path.join(directory, name))]
 
 
+def flatten_scores(scores):
+    return [item for sublist in scores for item in sublist]
+
+
 load_dotenv()
 args = parse_args()
 
@@ -95,13 +99,15 @@ for sub_subdirectory in BOHB_sub_subdirectories:
                     BOHB_optimization_scores.append(scores)
 
 plt.figure(figsize=(10, 5))
+
+plt.figure(figsize=(10, 5))
 box = plt.boxplot(
-    [np.hstack(grid_search_scores), np.hstack(random_search_scores),
-     np.hstack(bayesian_optimization_scores), np.hstack(hyperband_optimization_scores),
-     np.hstack(BOHB_optimization_scores)],
+    [flatten_scores(grid_search_scores), flatten_scores(random_search_scores),
+     flatten_scores(bayesian_optimization_scores), flatten_scores(hyperband_optimization_scores),
+     flatten_scores(BOHB_optimization_scores)],
     labels=['Grid Search', 'Random Search', 'Bayesian Optimization', 'Hyperband', 'BOHB'])
 
-plt.ylabel('FID Score')
+plt.ylabel('Frechet Inception Distance (FID)')
 plt.title('Boxplot of FID Scores for MNIST 8v0: Step 1')
 
 
@@ -114,7 +120,8 @@ def annotate_boxplot(boxplot, data):
 
 
 annotate_boxplot(box,
-                 [grid_search_scores, random_search_scores, bayesian_optimization_scores, hyperband_optimization_scores,
-                  BOHB_optimization_scores])
+                 [flatten_scores(grid_search_scores), flatten_scores(random_search_scores),
+                  flatten_scores(bayesian_optimization_scores), flatten_scores(hyperband_optimization_scores),
+                  flatten_scores(BOHB_optimization_scores)])
 
 plt.savefig('MNIST_8v0_boxplot_step1.png')
