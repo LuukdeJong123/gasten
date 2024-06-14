@@ -45,21 +45,15 @@ for filename in os.listdir(directory_rs):
         max_value = data[max_key]
         grid_search_scores.append(max_value)
 
-bayesian_directory = f"{os.environ['FILESDIR']}/out/bayesian_{args.dataset}-{args.pos_class}v{args.neg_class}"
+bayesian_directory = f"{os.environ['FILESDIR']}/out/bayesian_{args.dataset}-{args.pos_class}v{args.neg_class}/optimization"
 
 bayesian_directories = get_immediate_subdirectories(bayesian_directory)
-bayesian_directories.sort()
-bayesian_second_subdirectory = bayesian_directories[1]
+bayesian_second_subdirectory_path = os.path.join(bayesian_directory, bayesian_directories[0])
 
-bayesian_second_subdirectory_path = os.path.join(bayesian_directory, bayesian_second_subdirectory)
-print(bayesian_second_subdirectory_path)
+bayesian_sub_subdirectories = get_immediate_subdirectories(bayesian_second_subdirectory_path)
+print(bayesian_sub_subdirectories)
 bayesian_optimization_scores = []
-
-# Get the immediate subdirectories within the second subdirectory
-sub_subdirectories = get_immediate_subdirectories(bayesian_second_subdirectory_path)
-print(sub_subdirectories)
-# Loop over each subdirectory within the second subdirectory and find all JSON files
-for sub_subdirectory in sub_subdirectories:
+for sub_subdirectory in bayesian_sub_subdirectories:
     sub_subdirectory_path = os.path.join(bayesian_second_subdirectory_path, sub_subdirectory)
     for root, dirs, files in os.walk(sub_subdirectory_path):
         for file in files:
