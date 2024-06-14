@@ -49,17 +49,28 @@ bayesian_directory = f"{os.environ['FILESDIR']}/out/bayesian_{args.dataset}-{arg
 
 bayesian_directories = get_immediate_subdirectories(bayesian_directory)
 bayesian_directories.sort()
+print(bayesian_directories)
 bayesian_second_subdirectory = bayesian_directories[1]
 
 bayesian_second_subdirectory_path = os.path.join(bayesian_directory, bayesian_second_subdirectory)
 
 bayesian_optimization_scores = []
-bayesian_stats_file_path = os.path.join(bayesian_second_subdirectory_path, "stats.json")
-with open(bayesian_stats_file_path) as json_file:
-    json_data = json.load(json_file)
-    scores = json_data['eval']['fid']
-    best_score = max(scores)
-    bayesian_optimization_scores.append(best_score)
+
+# Get all subdirectories within the second subdirectory
+sub_subdirectories = get_immediate_subdirectories(bayesian_second_subdirectory_path)
+
+# Loop over each subdirectory and find all JSON files
+for sub_subdirectory in sub_subdirectories:
+    sub_subdirectory_path = os.path.join(bayesian_second_subdirectory_path, sub_subdirectory)
+    for root, dirs, files in os.walk(sub_subdirectory_path):
+        for file in files:
+            if file.endswith(".json"):
+                json_file_path = os.path.join(root, file)
+                with open(json_file_path) as json_file:
+                    json_data = json.load(json_file)
+                    scores = json_data['eval']['fid']
+                    best_score = max(scores)
+                    bayesian_optimization_scores.append(best_score)
 
 hyperband_directory = f"{os.environ['FILESDIR']}/out/hyperband_{args.dataset}-{args.pos_class}v{args.neg_class}/"
 
