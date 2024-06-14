@@ -2,57 +2,97 @@ import matplotlib.pyplot as plt
 import json
 import os
 import torch
-import numpy as np
+import argparse
+
+
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--pos', dest='pos_class', default=9,
+                        type=int, help='Positive class for binary classification')
+    parser.add_argument('--neg', dest='neg_class', default=4,
+                        type=int, help='Negative class for binary classification')
+    parser.add_argument('--dataset', dest='dataset',
+                        default='mnist', help='Dataset (mnist or fashion-mnist or cifar10)')
+    return parser.parse_args()
+
+
+def get_immediate_subdirectories(directory):
+    return [name for name in os.listdir(directory) if os.path.isdir(os.path.join(directory, name))]
+
+
+args = parse_args()
 
 random_search_scores = []
-for i in range(20):
-    data = torch.load(f"C:\\random_search_scores_fashion_mnist\\param_scores_random_search_step2_mnist_8v0_iteration_{i}.pt",
-                      map_location=torch.device('cpu'))
-    best_score = max(data.values())
-    random_search_scores.append(best_score)
-
+directory_rs = f"{os.environ['FILESDIR']}/random_search_scores_{args.dataset}.{args.pos_class}v{args.pos_class}"
+# Loop through all the files in the directory
+for filename in os.listdir(directory_rs):
+    if filename.endswith(".pt"):
+        filepath = os.path.join(directory_rs, filename)
+        data = torch.load(filepath)
+        max_key = max(data, key=data.get)
+        max_value = data[max_key]
+        random_search_scores.append(max_value)
 
 grid_search_scores = []
-for i in range(1, 13):
-    data = torch.load(f"C:\\grid_search_scores_fashion_mnist\\param_scores_grid_search_step2_mnist_8v0_iteration_{i}.pt",
-                      map_location=torch.device('cpu'))
-    best_score = max(data.values())
-    grid_search_scores.append(best_score)
+directory_gs = f"{os.environ['FILESDIR']}/grid_search_scores_{args.dataset}.{args.pos_class}v{args.pos_class}"
+# Loop through all the files in the directory
+for filename in os.listdir(directory_rs):
+    if filename.endswith(".pt"):
+        filepath = os.path.join(directory_rs, filename)
+        data = torch.load(filepath)
+        max_key = max(data, key=data.get)
+        max_value = data[max_key]
+        grid_search_scores.append(max_value)
 
+bayesian_directory = f"{os.environ['FILESDIR']}/tools/bayesian_{args.dataset}-{args.pos_class}v{args.pos_class}"
 
-def get_immediate_subdirectories(a_dir):
-    return [name for name in os.listdir(a_dir) if os.path.isdir(os.path.join(a_dir, name))]
+bayesian_directories = get_immediate_subdirectories(bayesian_directory)
+bayesian_directories.sort()
+bayesian_second_subdirectory = bayesian_directories[1]
 
+bayesian_second_subdirectory_path = os.path.join(bayesian_directory, bayesian_second_subdirectory)
 
 bayesian_optimization_scores = []
+bayesian_stats_file_path = os.path.join(bayesian_second_subdirectory_path, "stats.json")
+with open(bayesian_stats_file_path) as json_file:
+    json_data = json.load(json_file)
+    scores = json_data['eval']['fid']
+    best_score = max(scores)
+    bayesian_optimization_scores.append(best_score)
 
-directories = get_immediate_subdirectories("C:\\bayesian_mnist-9v4\\optimization\\Jun05T16-30_286g5hca")
-for directory in directories:
-    with open("C:\\bayesian_mnist-9v4\\optimization\\Jun05T16-30_286g5hca\\" + directory + "\\stats.json") as json_file:
-        json_data = json.load(json_file)
-        scores = json_data['eval']['fid']
-        best_score = max(scores)
-        bayesian_optimization_scores.append(best_score)
+hyperband_directory = f"{os.environ['FILESDIR']}/tools/hyperband_{args.dataset}-{args.pos_class}v{args.pos_class}/"
+
+hyperband_directories = get_immediate_subdirectories(hyperband_directory)
+hyperband_directories.sort()
+hyperband_second_subdirectory = hyperband_directories[1]
+
+hyperband_second_subdirectory_path = os.path.join(hyperband_directory, hyperband_second_subdirectory)
+
+hpyerband_optimization_scores = []
+hpyerband_stats_file_path = os.path.join(hyperband_second_subdirectory_path, "stats.json")
+with open(hpyerband_stats_file_path) as json_file:
+    json_data = json.load(json_file)
+    scores = json_data['eval']['fid']
+    best_score = max(scores)
+    hpyerband_optimization_scores.extend(best_score)
 
 hyperband_optimization_scores = []
 
-directories = get_immediate_subdirectories("C:\\hyperband_mnist-9v4\\optimization\\Jun05T16-23_2ujm06in")
-for directory in directories:
-    with open("C:\\hyperband_mnist-9v4\\optimization\\Jun05T16-23_2ujm06in\\" + directory + "\\stats.json") as json_file:
-        json_data = json.load(json_file)
-        scores = json_data['eval']['fid']
-        best_score = max(scores)
-        hyperband_optimization_scores.append(best_score)
+BOHB_directory = f"{os.environ['FILESDIR']}/tools/BOHB_{args.dataset}-{args.pos_class}v{args.pos_class}/"
+
+BOHB_directories = get_immediate_subdirectories(BOHB_directory)
+BOHB_directories.sort()
+BOHB_second_subdirectory = BOHB_directories[1]
+
+BOHB_second_subdirectory_path = os.path.join(BOHB_directory, BOHB_second_subdirectory)
 
 BOHB_optimization_scores = []
-
-directories = get_immediate_subdirectories("C:\\BOHB_mnist-9v4\\optimization\\Jun05T16-23_3spfhofi")
-for directory in directories:
-    with open("C:\\BOHB_mnist-9v4\\optimization\\Jun05T16-23_3spfhofi\\" + directory + "\\stats.json") as json_file:
-        json_data = json.load(json_file)
-        scores = json_data['eval']['fid']
-        best_score = max(scores)
-        BOHB_optimization_scores.append(best_score)
+BOHB_stats_file_path = os.path.join(BOHB_second_subdirectory_path, "stats.json")
+with open(BOHB_stats_file_path) as json_file:
+    json_data = json.load(json_file)
+    scores = json_data['eval']['fid']
+    best_score = max(scores)
+    BOHB_optimization_scores.extend(best_score)
 
 
 # Plot 1: Convergence Plot
