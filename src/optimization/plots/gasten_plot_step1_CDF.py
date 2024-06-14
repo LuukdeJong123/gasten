@@ -32,7 +32,9 @@ for filename in os.listdir(directory_rs):
     if filename.endswith(".pt"):
         filepath = os.path.join(directory_rs, filename)
         data = torch.load(filepath)
+        print(data)
         random_search_scores.extend(data.values())
+        break
 
 grid_search_scores = []
 directory_gs = f"{os.environ['FILESDIR']}/grid_search_scores_{args.dataset}.{args.pos_class}v{args.neg_class}"
@@ -41,7 +43,9 @@ for filename in os.listdir(directory_gs):
     if filename.endswith(".pt"):
         filepath = os.path.join(directory_gs, filename)
         data = torch.load(filepath)
+        print(data)
         grid_search_scores.extend(data.values())
+        break
 
 bayesian_directory = f"{os.environ['FILESDIR']}/out/bayesian_{args.dataset}-{args.pos_class}v{args.neg_class}/optimization"
 bayesian_directories = get_immediate_subdirectories(bayesian_directory)
