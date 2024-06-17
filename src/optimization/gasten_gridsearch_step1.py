@@ -106,8 +106,7 @@ def main():
         'n_blocks': [1, 2, 3, 4, 5]
     }
 
-    # Training loop with grid search for hyperparameter optimization
-    best_score = float('-inf')
+    best_score = float('inf')
     iteration = 0
     param_scores = {}
 
@@ -121,7 +120,6 @@ def main():
     parameter_list = list(ParameterSampler(param_grid, n_iter=500, random_state=rng))
 
     while iteration < len(parameter_list):
-        current_score = float('inf')
         config['model']["architecture"]['g_num_blocks'] = parameter_list[iteration]['n_blocks']
         config['model']["architecture"]['d_num_blocks'] = parameter_list[iteration]['n_blocks']
 
