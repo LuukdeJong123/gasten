@@ -8,6 +8,7 @@ import wandb
 import os
 from smac.multi_objective.parego import ParEGO
 from typing import Dict
+import numpy as np
 
 from src.metrics import fid, LossSecondTerm
 from src.gan.update_g import UpdateGeneratorGASTEN
@@ -23,6 +24,32 @@ import json
 from src.utils import load_z, setup_reprod, create_checkpoint_path, seed_worker
 from src.utils.checkpoint import checkpoint_gan
 
+
+def calculate_curvature(points):
+    """ Calculate the curvature of the given points """
+    n_points = len(points)
+    curvatures = np.zeros(n_points)
+
+    for i in range(1, n_points - 1):
+        p1 = points[i - 1]
+        p2 = points[i]
+        p3 = points[i + 1]
+
+        v1 = p2 - p1
+        v2 = p3 - p2
+
+        angle = np.arccos(np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2)))
+        curvatures[i] = angle
+
+    return curvatures
+
+
+def find_knee_point(data):
+    sorted_data = data[np.argsort(data[:, 0])]
+    curvatures = calculate_curvature(sorted_data)
+    knee_index = np.argmax(curvatures)
+
+    return sorted_data[knee_index]
 
 def list_of_strings(arg):
     return arg.split(',')
@@ -265,18 +292,22 @@ def main():
     smac = MultiFidelityFacade(scenario, train, multi_objective_algorithm=multi_objective_algorithm, overwrite=True)
     incumbents = smac.optimize()
 
+    data = np.array(smac.intensifier.trajectory[len(smac.intensifier.trajectory) - 1].costs)
+
+    knee_point = find_knee_point(data)
+
     print("Configs from the Pareto front (incumbents):")
-    for incumbent in incumbents:
-        print("Best Configuration:", incumbent.get_dictionary())
-        print("Configuration id:", incumbent.config_id)
-
-    cost_with_lowest_conf_dist = float('inf')  # Initialize with positive infinity to ensure any number will be lower
+    knee_point_config = 0
     for i in range(len(smac.intensifier.trajectory[len(smac.intensifier.trajectory) - 1].costs)):
-        if smac.intensifier.trajectory[len(smac.intensifier.trajectory) - 1].costs[i][1] < cost_with_lowest_conf_dist:
-            cost_with_lowest_conf_dist = i
+        print("Best Configuration:", incumbents[i].get_dictionary())
+        print("Configuration id:", incumbents[i].config_id)
+        print("Cost:", smac.intensifier.trajectory[len(smac.intensifier.trajectory) - 1].costs[i])
+        if smac.intensifier.trajectory[len(smac.intensifier.trajectory) - 1].costs[i] == list(knee_point):
+            knee_point_config = i
 
-    config_with_lowest_conf_dist = smac.intensifier.trajectory[len(smac.intensifier.trajectory) - 1].config_ids[
-        cost_with_lowest_conf_dist]
+    print(f"Knee point: {knee_point}")
+
+    config_with_lowest_conf_dist = smac.intensifier.trajectory[len(smac.intensifier.trajectory) - 1].config_ids[knee_point_config]
     with open(f'{os.environ["FILESDIR"]}/step-2-best-config-{args.dataset}-{pos_class}v{neg_class}.txt', 'w') as file:
         file.write(os.path.join(cp_dir, str(config_with_lowest_conf_dist)) + '\n')
         for incumbent in incumbents:
