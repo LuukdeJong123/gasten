@@ -83,21 +83,20 @@ all_scores = [
 
 # Boxplot for FID Scores
 plt.figure(figsize=(14, 7))
+plt.suptitle(f'Boxplot of HPO Techniques {args.dataset} {args.pos_class}v{args.neg_class}: Step 2', fontsize=16)
 
 plt.subplot(1, 2, 1)
 fid_data = [scores[0] for scores in all_scores]
 plt.boxplot(fid_data, patch_artist=True, labels=methods)
 plt.xlabel('HPO Techniques')
 plt.ylabel('Frechet Inception Distance (FID)')
-plt.title('Boxplot of FID Scores')
 
 # Boxplot for Confusion Distances
 plt.subplot(1, 2, 2)
 cd_data = [scores[1] for scores in all_scores]
 plt.boxplot(cd_data, patch_artist=True, labels=methods)
 plt.xlabel('HPO Techniques')
-plt.ylabel('Confusion Distance')
-plt.title('Boxplot of Confusion Distances')
+plt.ylabel('Confusion Distance (CD)')
 
 plt.tight_layout()
-plt.show()
+plt.savefig(f'{os.environ["FILESDIR"]}/images/{args.dataset}_{args.pos_class}v{args.neg_class}_boxplot_step2.png')

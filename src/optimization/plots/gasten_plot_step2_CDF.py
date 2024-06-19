@@ -83,14 +83,14 @@ all_scores = [
 
 # FID CDF
 plt.figure(figsize=(14, 7))  # Adjust the figure size for better visualization
+plt.suptitle(f'CDF of HPO Techniques {args.dataset} {args.pos_class}v{args.neg_class}: Step 2', fontsize=16)
 plt.subplot(1, 2, 1)
 for i, method in enumerate(methods):
     sorted_fid = np.sort(all_scores[i][0])
     cdf_fid = np.arange(len(sorted_fid)) / float(len(sorted_fid))
     plt.plot(sorted_fid, cdf_fid, label=method)
 plt.xlabel('Frechet Inception Distance (FID)')
-plt.ylabel('Cumulative Distribution')
-plt.title('CDF of FID Scores')
+plt.ylabel('Percentage of Iterations (%)')
 plt.legend()
 plt.grid(True)
 
@@ -100,11 +100,11 @@ for i, method in enumerate(methods):
     sorted_cd = np.sort(all_scores[i][1])
     cdf_cd = np.arange(len(sorted_cd)) / float(len(sorted_cd))
     plt.plot(sorted_cd, cdf_cd, label=method)
-plt.xlabel('Confusion Distance')
-plt.ylabel('Cumulative Distribution')
-plt.title('CDF of Confusion Distances')
+plt.ylabel('Confusion Distance (CD)')
+plt.ylabel('Percentage of Iterations (%)')
 plt.legend()
 plt.grid(True)
 
 plt.tight_layout()
-plt.show()
+plt.savefig(f'{os.environ["FILESDIR"]}/images/{args.dataset}_{args.pos_class}v{args.neg_class}_CDF_step1.png')
+

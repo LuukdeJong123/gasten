@@ -100,8 +100,8 @@ for i, method in enumerate(methods):
     plt.scatter(fid_scores, confusion_distances, color=colors[i], label=method, alpha=0.6)
 
 plt.xlabel('Frechet Inception Distance (FID)')
-plt.ylabel('Confusion Distance')
-plt.title('Scatter Plot of FID vs. Confusion Distance for Different HPO Techniques')
+plt.ylabel('Confusion Distance (CD)')
+plt.title('FID vs. CD for HPO Techniques: Step 2')
 plt.legend()
 plt.grid(True)
 plt.show()
