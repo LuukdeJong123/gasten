@@ -1,10 +1,11 @@
-import os
-import argparse
+import matplotlib.pyplot as plt
 import json
+import os
 import torch
 import numpy as np
-import matplotlib.pyplot as plt
+import argparse
 from dotenv import load_dotenv
+
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -16,8 +17,20 @@ def parse_args():
                         default='mnist', help='Dataset (mnist or fashion-mnist or cifar10)')
     return parser.parse_args()
 
+
 def get_immediate_subdirectories(directory):
     return [name for name in os.listdir(directory) if os.path.isdir(os.path.join(directory, name))]
+
+
+def flatten_scores(scores):
+    flattened = []
+    for sublist in scores:
+        if isinstance(sublist, (list, np.ndarray)):
+            flattened.extend(sublist)
+        else:
+            flattened.append(sublist)
+    return flattened
+
 
 load_dotenv()
 args = parse_args()
@@ -25,7 +38,7 @@ args = parse_args()
 def load_scores(directory, extension=".pt"):
     scores = []
     for filename in os.listdir(directory):
-        if filename.endswith(extension) and 'step1' in filename:
+        if filename.endswith(extension) and 'step2' in filename:
             filepath = os.path.join(directory, filename)
             data = torch.load(filepath)
             for values in data.values():
@@ -38,7 +51,7 @@ def load_scores(directory, extension=".pt"):
 def load_json_scores(directory):
     scores = []
     sub_subdirectories = get_immediate_subdirectories(directory)
-    sub_subdirectory_path = os.path.join(directory, sub_subdirectories[0])
+    sub_subdirectory_path = os.path.join(directory, sub_subdirectories[1])
     for root, dirs, files in os.walk(sub_subdirectory_path):
         for file in files:
             if file == "stats.json":
@@ -68,47 +81,28 @@ hyperband_optimization_scores = load_json_scores(hyperband_directory)
 BOHB_directory = f"{os.environ['FILESDIR']}/out/BOHB_{args.dataset}-{args.pos_class}v{args.neg_class}/optimization"
 BOHB_optimization_scores = load_json_scores(BOHB_directory)
 
-# Prepare data for CDF plotting
-techniques = {
-    "Random Search": np.array(random_search_scores),
-    "Grid Search": np.array(grid_search_scores),
-    "Bayesian Optimization": np.array(bayesian_optimization_scores),
-    "Hyperband": np.array(hyperband_optimization_scores),
-    "BOHB": np.array(BOHB_optimization_scores)
-}
+plt.figure(figsize=(10, 5))
+box = plt.boxplot(
+    [flatten_scores(grid_search_scores), flatten_scores(random_search_scores),
+     flatten_scores(bayesian_optimization_scores), flatten_scores(hyperband_optimization_scores),
+     flatten_scores(BOHB_optimization_scores)],
+    labels=['Grid Search', 'Random Search', 'Bayesian Optimization', 'Hyperband', 'BOHB'])
 
-# Create the CDF plot with reversed axes
-plt.figure(figsize=(10, 6))
-
-for name, data in techniques.items():
-    if len(data) == 0:
-        continue
-    # Flatten the data and sort
-    sorted_data = np.sort(np.array(data).flatten())
-    # Calculate the CDF
-    cdf = np.arange(1, len(sorted_data) + 1) / len(sorted_data)
-    # Plot the CDF with reversed axes
-    plt.plot(sorted_data, cdf * 100, label=name)
-
-# Labels and title
-plt.ylabel('Percentage of Iterations (%)')
-plt.xlabel('FID')
-plt.title(f'CDF of HPO Techniques {args.dataset} {args.pos_class}v{args.neg_class}: Step 1')
-plt.legend()
-plt.grid(True)
-
-plt.savefig(f'{os.environ["FILESDIR"]}/images/{args.dataset}_{args.pos_class}v{args.neg_class}_CDF_step1.png')
+plt.ylabel('Frechet Inception Distance (FID)')
+plt.title(f'Boxplot of FID Scores for {args.dataset} {args.pos_class}v{args.neg_class}: Step 1')
 
 
-plt.figure(figsize=(12, 8))
+def annotate_boxplot(boxplot, data):
+    for i, d in enumerate(data, 1):
+        min_val = np.min(d)
+        max_val = np.max(d)
+        plt.annotate(f'{min_val:.2f}', xy=(i, min_val), xytext=(i - 0.25, min_val - 10), ha='center', color='blue')
+        plt.annotate(f'{max_val:.2f}', xy=(i, max_val), xytext=(i + 0.25, max_val + 10), ha='center', color='red')
 
-for name, data in techniques.items():
-    if len(data) == 0:
-        continue
-    plt.hist(np.array(data).flatten(), bins=30, alpha=0.5, label=name)
 
-plt.xlabel('FID')
-plt.ylabel('Frequency')
-plt.title('Distribution of Performance Scores')
-plt.legend()
-plt.savefig(f'{os.environ["FILESDIR"]}/images/{args.dataset}_{args.pos_class}v{args.neg_class}_histogram_step1.png')
+annotate_boxplot(box,
+                 [flatten_scores(grid_search_scores), flatten_scores(random_search_scores),
+                  flatten_scores(bayesian_optimization_scores), flatten_scores(hyperband_optimization_scores),
+                  flatten_scores(BOHB_optimization_scores)])
+
+plt.savefig(f'{os.environ["FILESDIR"]}/images/{args.dataset}_{args.pos_class}v{args.neg_class}_boxplot_step2.png')
