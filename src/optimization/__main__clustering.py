@@ -57,17 +57,11 @@ def save(config, C_emb, images, estimator, classifier_name, estimator_name, clus
     save_estimator(config, estimator, classifier_name, estimator_name)
 
 
-def log_cluster(images, clustering_results, cluster_num, pos_class, neg_class, dataset):
-    cluster = []
-    for i in range(len(clustering_results)):
-        if clustering_results[i] == cluster_num:
-            image_cpu = images[i].cpu()
-            cluster.append(image_cpu)
+def log_cluster(images, clustering_result, cluster_num, pos_class, neg_class, dataset, i):
+    cluster_indices = np.where(np.array(clustering_result) == cluster_num)[0]
+    cluster = np.array([images[i].cpu().numpy() for i in cluster_indices])
 
-    # Convert the cluster list to a NumPy array
-    cluster = np.array(cluster)
-
-    torch.save(cluster,f"{os.environ['FILESDIR']}/clustering/cluster_{cluster_num}_{dataset}_{pos_class}v{neg_class}.pt")
+    torch.save(cluster,f"{os.environ['FILESDIR']}/clustering/cluster_iteration{i}_cluster_num{cluster_num}_{dataset}_{pos_class}v{neg_class}.pt")
 
     # Determine the number of images to plot (up to 300)
     num_images_to_plot = min(300, len(cluster))
@@ -112,52 +106,52 @@ def main():
         exit()
 
     fid_stats_path = f"{os.environ['FILESDIR']}/data/fid-stats/stats.inception.{args.dataset}.{pos_class}v{neg_class}.npz"
-    if not os.path.exists(fid_stats_path):
-        print(f"\nGenerating FID score for {pos_class}v{neg_class} ...")
-        subprocess.run(['python3', '-m', 'src.metrics.fid',
-                        '--data', args.dataroot,
-                        '--dataset', args.dataset,
-                        '--device', args.device,
-                        '--pos', pos_class, '--neg', neg_class])
+    # if not os.path.exists(fid_stats_path):
+    #     print(f"\nGenerating FID score for {pos_class}v{neg_class} ...")
+    #     subprocess.run(['python3', '-m', 'src.metrics.fid',
+    #                     '--data', args.dataroot,
+    #                     '--dataset', args.dataset,
+    #                     '--device', args.device,
+    #                     '--pos', pos_class, '--neg', neg_class])
+    #
+    #
+    # if not os.path.exists(f"{os.environ['FILESDIR']}/models/{args.dataset}.{pos_class}v{neg_class}"):
+    #     print(f"\nGenerating classifiers for {pos_class}v{neg_class} ...")
+    #     for clf_type, nf, epochs in itertools.product(l_clf_type, l_nf, l_epochs):
+    #         print("\n", clf_type, nf, epochs)
+    #         proc = subprocess.run(["python3", "-m", "src.classifier.train",
+    #                                "--device", args.device,
+    #                                "--data-dir", args.dataroot,
+    #                                "--out-dir", args.out_dir_models,
+    #                                "--dataset", args.dataset,
+    #                                "--pos", pos_class,
+    #                                "--neg", neg_class,
+    #                                "--classifier-type", clf_type,
+    #                                "--nf", nf,
+    #                                "--epochs", epochs,
+    #                                "--batch-size", str(args.batch_size),
+    #                                "--lr", str(args.lr)],
+    #                               capture_output=True)
+    #         for line in proc.stdout.split(b'\n')[-4:-1]:
+    #             print(line.decode())
+    #
+    # if not os.path.exists(f"{os.environ['FILESDIR']}/data/z/z_{args.nz}_{args.z_dim}"):
+    #     create_and_store_z(
+    #         args.out_dir_data, args.nz, args.z_dim,
+    #         config={'seed': seed, 'n_z': args.nz, 'z_dim': args.z_dim})
 
-
-    if not os.path.exists(f"{os.environ['FILESDIR']}/models/{args.dataset}.{pos_class}v{neg_class}"):
-        print(f"\nGenerating classifiers for {pos_class}v{neg_class} ...")
-        for clf_type, nf, epochs in itertools.product(l_clf_type, l_nf, l_epochs):
-            print("\n", clf_type, nf, epochs)
-            proc = subprocess.run(["python3", "-m", "src.classifier.train",
-                                   "--device", args.device,
-                                   "--data-dir", args.dataroot,
-                                   "--out-dir", args.out_dir_models,
-                                   "--dataset", args.dataset,
-                                   "--pos", pos_class,
-                                   "--neg", neg_class,
-                                   "--classifier-type", clf_type,
-                                   "--nf", nf,
-                                   "--epochs", epochs,
-                                   "--batch-size", str(args.batch_size),
-                                   "--lr", str(args.lr)],
-                                  capture_output=True)
-            for line in proc.stdout.split(b'\n')[-4:-1]:
-                print(line.decode())
-
-    if not os.path.exists(f"{os.environ['FILESDIR']}/data/z/z_{args.nz}_{args.z_dim}"):
-        create_and_store_z(
-            args.out_dir_data, args.nz, args.z_dim,
-            config={'seed': seed, 'n_z': args.nz, 'z_dim': args.z_dim})
-
-    subprocess.run(['python3', '-m', 'src.optimization.gasten_multifidelity_optimization_step1',
-                    '--config', args.config_path_optim, '--pos', pos_class, '--neg', neg_class,
-                    '--dataset', args.dataset, '--fid-stats', fid_stats_path])
-
-    classifiers = os.listdir(os.path.join(os.environ['FILESDIR'], 'models', f"{args.dataset}.{pos_class}v{neg_class}"))
-    classifier_paths = ",".join(
-        [f"{os.environ['FILESDIR']}/models/{args.dataset}.{pos_class}v{neg_class}/{classifier}" for classifier in
-         classifiers])
-
-    subprocess.run(['python3', '-m', 'src.optimization.gasten_multifidelity_optimization_step2',
-                    '--config', args.config_path_optim, '--classifiers', classifier_paths, '--pos', pos_class,
-                    '--neg', neg_class, '--dataset', args.dataset, '--fid-stats', fid_stats_path])
+    # subprocess.run(['python3', '-m', 'src.optimization.gasten_multifidelity_optimization_step1',
+    #                 '--config', args.config_path_optim, '--pos', pos_class, '--neg', neg_class,
+    #                 '--dataset', args.dataset, '--fid-stats', fid_stats_path])
+    #
+    # classifiers = os.listdir(os.path.join(os.environ['FILESDIR'], 'models', f"{args.dataset}.{pos_class}v{neg_class}"))
+    # classifier_paths = ",".join(
+    #     [f"{os.environ['FILESDIR']}/models/{args.dataset}.{pos_class}v{neg_class}/{classifier}" for classifier in
+    #      classifiers])
+    #
+    # subprocess.run(['python3', '-m', 'src.optimization.gasten_multifidelity_optimization_step2',
+    #                 '--config', args.config_path_optim, '--classifiers', classifier_paths, '--pos', pos_class,
+    #                 '--neg', neg_class, '--dataset', args.dataset, '--fid-stats', fid_stats_path])
 
     print("Start clustering")
 
@@ -180,29 +174,30 @@ def main():
 
     netG, C, C_emb, classifier_name = load_gasten(config_clustering, best_config_optim['classifier'], best_config_optim)
 
-    # generate images
-    syn_images_f, syn_embeddings_f = generate_embeddings(config_clustering, netG, C, C_emb, classifier_name)
+    for i in range(1):
+        # generate images
+        syn_images_f, syn_embeddings_f = generate_embeddings(config_clustering, netG, C, C_emb, classifier_name)
 
-    # apply clustering
-    estimator, score, embeddings_reduced, clustering_result = hyper_tunning_clusters(config_clustering, classifier_name,
-                                                                                     'umap',
-                                                                                     'gmm',
-                                                                                     syn_embeddings_f)
+        # apply clustering
+        estimator, score, embeddings_reduced, clustering_result = hyper_tunning_clusters(config_clustering, classifier_name,
+                                                                                         'umap',
+                                                                                         'gmm',
+                                                                                         syn_embeddings_f)
 
-    save(config_clustering, C_emb, syn_images_f, estimator, classifier_name, 'auto_gasten', clustering_result, C)
+        save(config_clustering, C_emb, syn_images_f, estimator, classifier_name, 'auto_gasten', clustering_result, C)
 
-    wandb.init(project=config_clustering['project'],
-               dir=os.environ['FILESDIR'],
-               group=config_clustering['name'],
-               entity=os.environ['ENTITY'],
-               job_type='cluster_results',
-               name="cluster_results")
+        wandb.init(project=config_clustering['project'],
+                   dir=os.environ['FILESDIR'],
+                   group=config_clustering['name'],
+                   entity=os.environ['ENTITY'],
+                   job_type='cluster_results',
+                   name="cluster_results")
 
-    unique_clusters = set(clustering_result)
-    for cluster_num in unique_clusters:
-        log_cluster(syn_images_f, clustering_result, cluster_num, pos_class, neg_class, args.dataset)
+        unique_clusters = set(clustering_result)
+        for cluster_num in unique_clusters:
+            log_cluster(syn_images_f, clustering_result, cluster_num, pos_class, neg_class, args.dataset, i)
 
-    wandb.finish()
+        wandb.finish()
 
 
 if __name__ == '__main__':

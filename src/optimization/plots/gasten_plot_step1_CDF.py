@@ -97,7 +97,7 @@ plt.title('CDF of Comparing HPO Techniques')
 plt.legend()
 plt.grid(True)
 
-plt.savefig('MNIST_8v0_CDF_step1.png')
+plt.savefig(f'{args.dataset}_{args.pos_class}v{args.neg_class}_CDF_step1.png')
 
 
 plt.figure(figsize=(12, 8))
@@ -111,4 +111,4 @@ plt.xlabel('FID')
 plt.ylabel('Frequency')
 plt.title('Distribution of Performance Scores')
 plt.legend()
-plt.savefig('MNIST_8v0_histogram_step1.png')
+plt.savefig(f'{args.dataset}_{args.pos_class}v{args.neg_class}_histogram_step1.png')
