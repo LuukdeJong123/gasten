@@ -123,7 +123,7 @@ def main():
         os.makedirs(f"{os.environ['FILESDIR']}/random_search_scores_{args.dataset}.{pos_class}v{neg_class}")
 
     def random_search(param_distributions):
-        time_limit = 72000
+        time_limit = 7200
         start_time = time.time()
         i = 0
 

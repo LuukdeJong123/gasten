@@ -135,7 +135,7 @@ def main():
     # Training loop with grid search for hyperparameter optimization
     iteration = 0
     param_scores = {}
-    time_limit = 72000
+    time_limit = 7200
     start_time = time.time()
     rng = np.random.RandomState(0)
 
