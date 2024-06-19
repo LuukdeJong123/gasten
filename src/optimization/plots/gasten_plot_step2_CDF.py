@@ -106,5 +106,5 @@ plt.legend()
 plt.grid(True)
 
 plt.tight_layout()
-plt.savefig(f'{os.environ["FILESDIR"]}/images/{args.dataset}_{args.pos_class}v{args.neg_class}_CDF_step1.png')
+plt.savefig(f'{os.environ["FILESDIR"]}/images/{args.dataset}_{args.pos_class}v{args.neg_class}_CDF_step2.png')
 
