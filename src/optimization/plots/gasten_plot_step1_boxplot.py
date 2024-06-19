@@ -128,4 +128,4 @@ annotate_boxplot(box,
                   flatten_scores(bayesian_optimization_scores), flatten_scores(hyperband_optimization_scores),
                   flatten_scores(BOHB_optimization_scores)])
 
-plt.savefig(f'{args.dataset}_{args.pos_class}v{args.neg_class}_boxplot_step1.png')
+plt.savefig(f'{os.environ["FILESDIR"]}/images/{args.dataset}_{args.pos_class}v{args.neg_class}_boxplot_step1.png')
