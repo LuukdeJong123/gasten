@@ -36,19 +36,16 @@ load_dotenv()
 args = parse_args()
 
 def load_scores(directory, extension=".pt"):
-    scores = []
+    scores_fid = []
+    scores_cd = []
     for filename in os.listdir(directory):
         if filename.endswith(extension) and 'step2' in filename:
             filepath = os.path.join(directory, filename)
             data = torch.load(filepath)
             for values in data.values():
-                print(values)
-                exit()
-                if isinstance(values, list):
-                    scores.extend(values)
-                else:
-                    scores.append(values)
-    return scores
+                scores_fid.append(values[0])
+                scores_cd.append(values[1])
+    return scores_fid, scores_cd
 
 def load_json_scores(directory):
     scores_fid = []
@@ -67,11 +64,11 @@ def load_json_scores(directory):
 
 # Load Random Search Scores
 directory_rs = f"{os.environ['FILESDIR']}/random_search_scores_{args.dataset}.{args.pos_class}v{args.neg_class}"
-random_search_scores = load_scores(directory_rs)
+random_search_scores, random_search_cd = load_scores(directory_rs)
 
 # Load Grid Search Scores
 directory_gs = f"{os.environ['FILESDIR']}/grid_search_scores_{args.dataset}.{args.pos_class}v{args.neg_class}"
-grid_search_scores = load_scores(directory_gs)
+grid_search_scores, grid_search_cd = load_scores(directory_gs)
 
 # Load Bayesian Optimization Scores
 bayesian_directory = f"{os.environ['FILESDIR']}/out/bayesian_{args.dataset}-{args.pos_class}v{args.neg_class}/optimization"

@@ -23,92 +23,88 @@ load_dotenv()
 args = parse_args()
 
 def load_scores(directory, extension=".pt"):
-    scores = []
+    scores_fid = []
+    scores_cd = []
     for filename in os.listdir(directory):
-        if filename.endswith(extension) and 'step1' in filename:
+        if filename.endswith(extension) and 'step2' in filename:
             filepath = os.path.join(directory, filename)
             data = torch.load(filepath)
             for values in data.values():
-                if isinstance(values, list):
-                    scores.extend(values)
-                else:
-                    scores.append(values)
-    return scores
+                scores_fid.append(values[0])
+                scores_cd.append(values[1])
+    return scores_fid, scores_cd
 
 def load_json_scores(directory):
-    scores = []
+    scores_fid = []
+    scores_cd = []
     sub_subdirectories = get_immediate_subdirectories(directory)
-    sub_subdirectory_path = os.path.join(directory, sub_subdirectories[0])
+    sub_subdirectory_path = os.path.join(directory, sub_subdirectories[1])
     for root, dirs, files in os.walk(sub_subdirectory_path):
         for file in files:
             if file == "stats.json":
                 json_file_path = os.path.join(root, file)
                 with open(json_file_path) as json_file:
                     json_data = json.load(json_file)
-                    scores.extend(json_data['eval']['fid'])
-    return scores
+                    scores_fid.extend(json_data['eval']['fid'])
+                    scores_cd.extend(json_data['eval']['conf_dist'])
+    return scores_fid, scores_cd
 
 # Load Random Search Scores
 directory_rs = f"{os.environ['FILESDIR']}/random_search_scores_{args.dataset}.{args.pos_class}v{args.neg_class}"
-random_search_scores = load_scores(directory_rs)
+random_search_scores, random_search_cd = load_scores(directory_rs)
 
 # Load Grid Search Scores
 directory_gs = f"{os.environ['FILESDIR']}/grid_search_scores_{args.dataset}.{args.pos_class}v{args.neg_class}"
-grid_search_scores = load_scores(directory_gs)
+grid_search_scores, grid_search_cd = load_scores(directory_gs)
 
 # Load Bayesian Optimization Scores
 bayesian_directory = f"{os.environ['FILESDIR']}/out/bayesian_{args.dataset}-{args.pos_class}v{args.neg_class}/optimization"
-bayesian_optimization_scores = load_json_scores(bayesian_directory)
+bayesian_optimization_scores, bayesian_optimization_cd = load_json_scores(bayesian_directory)
 
 # Load Hyperband Scores
 hyperband_directory = f"{os.environ['FILESDIR']}/out/hyperband_{args.dataset}-{args.pos_class}v{args.neg_class}/optimization"
-hyperband_optimization_scores = load_json_scores(hyperband_directory)
+hyperband_optimization_scores, hyperband_optimization_cd = load_json_scores(hyperband_directory)
 
 # Load BOHB Scores
 BOHB_directory = f"{os.environ['FILESDIR']}/out/BOHB_{args.dataset}-{args.pos_class}v{args.neg_class}/optimization"
-BOHB_optimization_scores = load_json_scores(BOHB_directory)
+BOHB_optimization_scores, BOHB_optimization_cd = load_json_scores(BOHB_directory)
 
-# Prepare data for CDF plotting
-techniques = {
-    "Random Search": np.array(random_search_scores),
-    "Grid Search": np.array(grid_search_scores),
-    "Bayesian Optimization": np.array(bayesian_optimization_scores),
-    "Hyperband": np.array(hyperband_optimization_scores),
-    "BOHB": np.array(BOHB_optimization_scores)
-}
+# Plotting the real data
+methods = ['Random Search', 'Grid Search', 'Bayesian Optimization', 'Hyperband', 'BOHB']
+colors = ['blue', 'orange', 'green', 'red', 'purple']
 
-# Create the CDF plot with reversed axes
-plt.figure(figsize=(10, 6))
+all_scores = [
+    (random_search_scores, random_search_cd),
+    (grid_search_scores, grid_search_cd),
+    (bayesian_optimization_scores, bayesian_optimization_cd),
+    (hyperband_optimization_scores, hyperband_optimization_cd),
+    (BOHB_optimization_scores, BOHB_optimization_cd)
+]
 
-for name, data in techniques.items():
-    if len(data) == 0:
-        continue
-    # Flatten the data and sort
-    sorted_data = np.sort(np.array(data).flatten())
-    # Calculate the CDF
-    cdf = np.arange(1, len(sorted_data) + 1) / len(sorted_data)
-    # Plot the CDF with reversed axes
-    plt.plot(sorted_data, cdf * 100, label=name)
-
-# Labels and title
-plt.ylabel('Percentage of Iterations (%)')
-plt.xlabel('FID')
-plt.title(f'CDF of HPO Techniques {args.dataset} {args.pos_class}v{args.neg_class}: Step 1')
+# FID CDF
+plt.figure(figsize=(14, 7))  # Adjust the figure size for better visualization
+plt.subplot(1, 2, 1)
+for i, method in enumerate(methods):
+    sorted_fid = np.sort(all_scores[i][0])
+    cdf_fid = np.arange(len(sorted_fid)) / float(len(sorted_fid))
+    plt.plot(sorted_fid, cdf_fid, label=method)
+plt.xlabel('Frechet Inception Distance (FID)')
+plt.ylabel('Cumulative Distribution')
+plt.title('CDF of FID Scores')
 plt.legend()
 plt.grid(True)
 
-plt.savefig(f'{os.environ["FILESDIR"]}/images/{args.dataset}_{args.pos_class}v{args.neg_class}_CDF_step1.png')
-
-
-plt.figure(figsize=(12, 8))
-
-for name, data in techniques.items():
-    if len(data) == 0:
-        continue
-    plt.hist(np.array(data).flatten(), bins=30, alpha=0.5, label=name)
-
-plt.xlabel('FID')
-plt.ylabel('Frequency')
-plt.title('Distribution of Performance Scores')
+# Confusion Distance CDF
+plt.subplot(1, 2, 2)
+for i, method in enumerate(methods):
+    sorted_cd = np.sort(all_scores[i][1])
+    cdf_cd = np.arange(len(sorted_cd)) / float(len(sorted_cd))
+    plt.plot(sorted_cd, cdf_cd, label=method)
+plt.xlabel('Confusion Distance')
+plt.ylabel('Cumulative Distribution')
+plt.title('CDF of Confusion Distances')
 plt.legend()
-plt.savefig(f'{os.environ["FILESDIR"]}/images/{args.dataset}_{args.pos_class}v{args.neg_class}_histogram_step1.png')
+plt.grid(True)
+
+plt.tight_layout()
+plt.show()
