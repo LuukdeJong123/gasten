@@ -109,6 +109,6 @@ plt.plot(range(1, len(hyperband_optimization_scores) + 1), hyperband_optimizatio
 plt.plot(range(1, len(BOHB_optimization_scores) + 1), BOHB_optimization_scores, label='BOHB')
 plt.xlabel('Iteration')
 plt.ylabel('FID Score')
-plt.title('Converging FID Score for MNIST 8v0: Step 1')
+plt.title(f'Converging FID Score for {args.dataset} {args.pos_class}v{args.neg_class}: Step 1')
 plt.legend()
 plt.savefig(f'{args.dataset}_{args.pos_class}v{args.neg_class}_convergence_step1.png')

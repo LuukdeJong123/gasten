@@ -93,7 +93,7 @@ for name, data in techniques.items():
 # Labels and title
 plt.ylabel('Percentage of Iterations (%)')
 plt.xlabel('FID')
-plt.title('CDF of Comparing HPO Techniques')
+plt.title(f'CDF of HPO Techniques {args.dataset} {args.pos_class}v{args.neg_class}: Step 1')
 plt.legend()
 plt.grid(True)
 

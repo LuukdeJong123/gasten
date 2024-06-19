@@ -112,7 +112,7 @@ box = plt.boxplot(
     labels=['Grid Search', 'Random Search', 'Bayesian Optimization', 'Hyperband', 'BOHB'])
 
 plt.ylabel('Frechet Inception Distance (FID)')
-plt.title('Boxplot of FID Scores for MNIST 8v0: Step 1')
+plt.title(f'Boxplot of FID Scores for {args.dataset} {args.pos_class}v{args.neg_class}: Step 1')
 
 
 def annotate_boxplot(boxplot, data):
