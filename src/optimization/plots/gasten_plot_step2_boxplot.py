@@ -87,14 +87,14 @@ plt.suptitle(f'Boxplot of HPO Techniques {args.dataset} {args.pos_class}v{args.n
 
 plt.subplot(1, 2, 1)
 fid_data = [scores[0] for scores in all_scores]
-plt.boxplot(fid_data, patch_artist=True, labels=methods)
+plt.boxplot(fid_data, labels=methods)
 plt.xlabel('HPO Techniques')
 plt.ylabel('Frechet Inception Distance (FID)')
 
 # Boxplot for Confusion Distances
 plt.subplot(1, 2, 2)
 cd_data = [scores[1] for scores in all_scores]
-plt.boxplot(cd_data, patch_artist=True, labels=methods)
+plt.boxplot(cd_data, labels=methods)
 plt.xlabel('HPO Techniques')
 plt.ylabel('Confusion Distance (CD)')
 
