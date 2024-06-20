@@ -24,10 +24,12 @@ def get_immediate_subdirectories(directory):
 def load_pt_files(directory):
     scores = []
     for filename in os.listdir(directory):
-        if filename.endswith(".pt"):
+        if filename.endswith(".pt") and 'step1' in filename:
             filepath = os.path.join(directory, filename)
             data = torch.load(filepath)
             last_value = list(data.values())[len(data.keys()) - 1]
+            print(last_value)
+            print(len(scores))
             if len(scores) > 0 and last_value > scores[-1]:
                 scores.append(scores[-1])
             else:
