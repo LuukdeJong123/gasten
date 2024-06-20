@@ -4,6 +4,7 @@ import os
 import torch
 import argparse
 from dotenv import load_dotenv
+from matplotlib.ticker import ScalarFormatter
 
 
 def parse_args():
@@ -73,14 +74,19 @@ BOHB_optimization_scores = load_json_scores(BOHB_directory)
 
 # Plot 1: Convergence Plot
 plt.figure(figsize=(10, 5))
-plt.plot(range(1, len(grid_search_scores) + 1), grid_search_scores, label='Grid search', marker='s', color='black')
-plt.plot(range(1, len(random_search_scores) + 1), random_search_scores, label='Random Search', marker='o', color='green')
-plt.plot(range(1, len(bayesian_optimization_scores) + 1), bayesian_optimization_scores, label='Bayesian Optimization', marker='^', color='brown')
-plt.plot(range(1, len(hyperband_optimization_scores) + 1), hyperband_optimization_scores, label='Hyperband', marker='D', color='magenta')
-plt.plot(range(1, len(BOHB_optimization_scores) + 1), BOHB_optimization_scores, label='BOHB', marker='s', color='lightblue')
+plt.plot(range(1, len(grid_search_scores) + 1), grid_search_scores, label='Grid search', color='black')
+plt.plot(range(1, len(random_search_scores) + 1), random_search_scores, label='Random Search', color='green')
+plt.plot(range(1, len(bayesian_optimization_scores) + 1), bayesian_optimization_scores, label='Bayesian Optimization', color='brown')
+plt.plot(range(1, len(hyperband_optimization_scores) + 1), hyperband_optimization_scores, label='Hyperband', color='magenta')
+plt.plot(range(1, len(BOHB_optimization_scores) + 1), BOHB_optimization_scores, label='BOHB', color='lightblue')
 plt.xlabel('Iteration')
 plt.ylabel('FID Score')
 plt.yscale('log')
+ax = plt.gca()
+ax.yaxis.set_major_formatter(ScalarFormatter())
+plt.minorticks_off()
+plt.yticks([0,10,20,50,100,300,500,700],[0,10,20,50,100,300,500,700])
 plt.title(f'Converging FID Score for {args.dataset} {args.pos_class}v{args.neg_class}: Step 1')
 plt.legend()
+plt.grid(True)
 plt.savefig(f'{os.environ["FILESDIR"]}/images/{args.dataset}_{args.pos_class}v{args.neg_class}_convergence_step1.png')

@@ -5,7 +5,7 @@ import torch
 import numpy as np
 import argparse
 from dotenv import load_dotenv
-
+from matplotlib.ticker import ScalarFormatter
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -102,6 +102,11 @@ for i, method in enumerate(methods):
 plt.xlabel('Frechet Inception Distance (FID)')
 plt.ylabel('Confusion Distance (CD)')
 plt.title('FID vs. CD for HPO Techniques: Step 2')
+plt.xscale('log')
+ax = plt.gca()
+ax.xaxis.set_major_formatter(ScalarFormatter())
+plt.minorticks_off()
+plt.xticks([0,5,10,12,15,17,20,30,40,60,70],[0,5,10,12,15,17,20,30,40,60,70])
 plt.legend()
 plt.grid(True)
 plt.savefig(f'{os.environ["FILESDIR"]}/images/{args.dataset}_{args.pos_class}v{args.neg_class}_scatter_step2.png')

@@ -6,6 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from dotenv import load_dotenv
 
+
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--pos', dest='pos_class', default=9,
@@ -16,24 +17,28 @@ def parse_args():
                         default='mnist', help='Dataset (mnist or fashion-mnist or cifar10)')
     return parser.parse_args()
 
+
 def get_immediate_subdirectories(directory):
     return [name for name in os.listdir(directory) if os.path.isdir(os.path.join(directory, name))]
+
 
 load_dotenv()
 args = parse_args()
 
-def load_scores(directory, extension=".pt"):
+
+def load_pt_files(directory):
     scores = []
     for filename in os.listdir(directory):
-        if filename.endswith(extension) and 'step1' in filename:
+        if filename.endswith(".pt") and 'step1' in filename:
             filepath = os.path.join(directory, filename)
             data = torch.load(filepath)
-            for values in data.values():
-                if isinstance(values, list):
-                    scores.extend(values)
-                else:
-                    scores.append(values)
+            last_value = list(data.values())[len(data.keys()) - 1]
+            if len(scores) > 0 and last_value > scores[-1]:
+                scores.append(scores[-1])
+            else:
+                scores.append(last_value)
     return scores
+
 
 def load_json_scores(directory):
     scores = []
@@ -45,26 +50,26 @@ def load_json_scores(directory):
                 json_file_path = os.path.join(root, file)
                 with open(json_file_path) as json_file:
                     json_data = json.load(json_file)
-                    scores.extend(json_data['eval']['fid'])
+                    last_score = json_data['eval']['fid'][len(json_data['eval']['fid']) - 1]
+                    if len(scores) > 0 and last_score > scores[-1]:
+                        scores.append(scores[-1])
+                    else:
+                        scores.append(last_score)
     return scores
 
-# Load Random Search Scores
+
 directory_rs = f"{os.environ['FILESDIR']}/random_search_scores_{args.dataset}.{args.pos_class}v{args.neg_class}"
-random_search_scores = load_scores(directory_rs)
+random_search_scores = load_pt_files(directory_rs)
 
-# Load Grid Search Scores
 directory_gs = f"{os.environ['FILESDIR']}/grid_search_scores_{args.dataset}.{args.pos_class}v{args.neg_class}"
-grid_search_scores = load_scores(directory_gs)
+grid_search_scores = load_pt_files(directory_gs)
 
-# Load Bayesian Optimization Scores
 bayesian_directory = f"{os.environ['FILESDIR']}/out/bayesian_{args.dataset}-{args.pos_class}v{args.neg_class}/optimization"
 bayesian_optimization_scores = load_json_scores(bayesian_directory)
 
-# Load Hyperband Scores
 hyperband_directory = f"{os.environ['FILESDIR']}/out/hyperband_{args.dataset}-{args.pos_class}v{args.neg_class}/optimization"
 hyperband_optimization_scores = load_json_scores(hyperband_directory)
 
-# Load BOHB Scores
 BOHB_directory = f"{os.environ['FILESDIR']}/out/BOHB_{args.dataset}-{args.pos_class}v{args.neg_class}/optimization"
 BOHB_optimization_scores = load_json_scores(BOHB_directory)
 
@@ -81,13 +86,8 @@ techniques = {
 plt.figure(figsize=(10, 6))
 
 for name, data in techniques.items():
-    if len(data) == 0:
-        continue
-    # Flatten the data and sort
     sorted_data = np.sort(np.array(data).flatten())
-    # Calculate the CDF
     cdf = np.arange(1, len(sorted_data) + 1) / len(sorted_data)
-    # Plot the CDF with reversed axes
     plt.plot(sorted_data, cdf * 100, label=name)
 
 # Labels and title
@@ -99,16 +99,15 @@ plt.grid(True)
 
 plt.savefig(f'{os.environ["FILESDIR"]}/images/{args.dataset}_{args.pos_class}v{args.neg_class}_CDF_step1.png')
 
-
-plt.figure(figsize=(12, 8))
-
-for name, data in techniques.items():
-    if len(data) == 0:
-        continue
-    plt.hist(np.array(data).flatten(), bins=30, alpha=0.5, label=name)
-
-plt.xlabel('FID')
-plt.ylabel('Frequency')
-plt.title('Distribution of Performance Scores')
-plt.legend()
-plt.savefig(f'{os.environ["FILESDIR"]}/images/{args.dataset}_{args.pos_class}v{args.neg_class}_histogram_step1.png')
+# plt.figure(figsize=(12, 8))
+#
+# for name, data in techniques.items():
+#     if len(data) == 0:
+#         continue
+#     plt.hist(np.array(data).flatten(), bins=30, alpha=0.5, label=name)
+#
+# plt.xlabel('FID')
+# plt.ylabel('Frequency')
+# plt.title('Distribution of Performance Scores')
+# plt.legend()
+# plt.savefig(f'{os.environ["FILESDIR"]}/images/{args.dataset}_{args.pos_class}v{args.neg_class}_histogram_step1.png')
