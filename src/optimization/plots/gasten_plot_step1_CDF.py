@@ -5,6 +5,7 @@ import torch
 import numpy as np
 import matplotlib.pyplot as plt
 from dotenv import load_dotenv
+from matplotlib.ticker import ScalarFormatter
 
 
 def parse_args():
@@ -95,6 +96,11 @@ plt.ylabel('Percentage of Iterations (%)')
 plt.xlabel('FID')
 plt.title(f'CDF of HPO Techniques {args.dataset} {args.pos_class}v{args.neg_class}: Step 1')
 plt.legend()
+plt.xscale('log')
+ax = plt.gca()
+ax.xaxis.set_major_formatter(ScalarFormatter())
+plt.minorticks_off()
+plt.yticks([0,10,20,50,100,300,500,700],[0,10,20,50,100,300,500,700])
 plt.grid(True)
 
 plt.savefig(f'{os.environ["FILESDIR"]}/images/{args.dataset}_{args.pos_class}v{args.neg_class}_CDF_step1.png')

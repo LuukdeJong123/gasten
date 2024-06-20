@@ -102,7 +102,6 @@ for i, method in enumerate(methods):
 plt.xlabel('Frechet Inception Distance (FID)')
 plt.ylabel('Confusion Distance (CD)')
 plt.title('FID vs. CD for HPO Techniques: Step 2')
-plt.xscale('log')
 ax = plt.gca()
 ax.xaxis.set_major_formatter(ScalarFormatter())
 plt.minorticks_off()
