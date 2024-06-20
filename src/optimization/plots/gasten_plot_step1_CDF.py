@@ -83,7 +83,6 @@ techniques = {
     "BOHB": np.array(BOHB_optimization_scores)
 }
 
-# Create the CDF plot with reversed axes
 plt.figure(figsize=(10, 6))
 
 for name, data in techniques.items():
@@ -97,11 +96,9 @@ plt.xlabel('FID')
 plt.title(f'CDF of HPO Techniques {args.dataset} {args.pos_class}v{args.neg_class}: Step 1')
 plt.legend()
 ax = plt.gca()
-ax.xaxis.set_major_formatter(ScalarFormatter())
-plt.minorticks_off()
+ax.get_xaxis().set_major_formatter(ScalarFormatter())
 plt.xticks([0,10,20,50,100,300,500,700],[0,10,20,50,100,300,500,700])
 plt.grid(True)
-
 plt.savefig(f'{os.environ["FILESDIR"]}/images/{args.dataset}_{args.pos_class}v{args.neg_class}_CDF_step1.png')
 
 # plt.figure(figsize=(12, 8))
