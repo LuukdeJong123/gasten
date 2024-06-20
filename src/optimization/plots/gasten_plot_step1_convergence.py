@@ -28,7 +28,7 @@ def load_pt_files(directory):
             filepath = os.path.join(directory, filename)
             data = torch.load(filepath)
             last_value = list(data.values())[len(data.keys()) - 1]
-            if scores and last_value > scores[-1]:
+            if len(scores) > 0 and last_value > scores[-1]:
                 scores.append(scores[-1])
             else:
                 scores.append(last_value)
@@ -46,7 +46,7 @@ def load_json_scores(directory):
                 with open(json_file_path) as json_file:
                     json_data = json.load(json_file)
                     last_score = json_data['eval']['fid'][len(json_data['eval']['fid']) - 1]
-                    if scores and last_score < scores[-1]:
+                    if len(scores) > 0 and last_score < scores[-1]:
                         scores.append(scores[-1])
                     else:
                         scores.append(last_score)
