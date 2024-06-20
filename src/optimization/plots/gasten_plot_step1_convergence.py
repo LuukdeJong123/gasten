@@ -46,7 +46,7 @@ def load_json_scores(directory):
                 with open(json_file_path) as json_file:
                     json_data = json.load(json_file)
                     last_score = json_data['eval']['fid'][len(json_data['eval']['fid']) - 1]
-                    if len(scores) > 0 and last_score < scores[-1]:
+                    if len(scores) > 0 and last_score > scores[-1]:
                         scores.append(scores[-1])
                     else:
                         scores.append(last_score)
@@ -73,13 +73,14 @@ BOHB_optimization_scores = load_json_scores(BOHB_directory)
 
 # Plot 1: Convergence Plot
 plt.figure(figsize=(10, 5))
-plt.plot(range(1, len(grid_search_scores) + 1), grid_search_scores, label='Grid search')
-plt.plot(range(1, len(random_search_scores) + 1), random_search_scores, label='Random Search')
-plt.plot(range(1, len(bayesian_optimization_scores) + 1), bayesian_optimization_scores, label='Bayesian Optimization')
-plt.plot(range(1, len(hyperband_optimization_scores) + 1), hyperband_optimization_scores, label='Hyperband')
-plt.plot(range(1, len(BOHB_optimization_scores) + 1), BOHB_optimization_scores, label='BOHB')
+plt.plot(range(1, len(grid_search_scores) + 1), grid_search_scores, label='Grid search', marker='s', color='black')
+plt.plot(range(1, len(random_search_scores) + 1), random_search_scores, label='Random Search', marker='o', color='green')
+plt.plot(range(1, len(bayesian_optimization_scores) + 1), bayesian_optimization_scores, label='Bayesian Optimization', marker='^', color='brown')
+plt.plot(range(1, len(hyperband_optimization_scores) + 1), hyperband_optimization_scores, label='Hyperband', marker='D', color='magenta')
+plt.plot(range(1, len(BOHB_optimization_scores) + 1), BOHB_optimization_scores, label='BOHB', marker='s', color='lightblue')
 plt.xlabel('Iteration')
 plt.ylabel('FID Score')
+plt.yscale('log')
 plt.title(f'Converging FID Score for {args.dataset} {args.pos_class}v{args.neg_class}: Step 1')
 plt.legend()
 plt.savefig(f'{os.environ["FILESDIR"]}/images/{args.dataset}_{args.pos_class}v{args.neg_class}_convergence_step1.png')
