@@ -84,25 +84,27 @@ techniques = {
 }
 
 plt.figure(figsize=(10, 6))
+colors = ['blue', 'green', 'orange', 'red', 'purple']
 
+i = 0
 for name, data in techniques.items():
     sorted_data = np.sort(np.array(data).flatten())
     cdf = np.arange(1, len(sorted_data) + 1) / len(sorted_data)
-    plt.plot(sorted_data, cdf * 100, label=name)
+    plt.plot(cdf * 100, sorted_data, label=name, color=colors[i])
+    i += 1
 
-# Labels and title
-plt.ylabel('Percentage of Iterations (%)')
-plt.xlabel('FID')
-plt.title(f'CDF of HPO Techniques {args.dataset} {args.pos_class}v{args.neg_class}: Step 1')
+plt.xlabel('Percentage of Iterations (%)')
+plt.ylabel('FID')
+plt.title(f'Performance of HPO Techniques {args.dataset} {args.pos_class}v{args.neg_class}: Step 1')
 plt.legend()
-plt.xscale('log')
+plt.yscale('log')
 ax = plt.gca()
-ax.xaxis.set_major_formatter(ScalarFormatter())
-ax.xaxis.set_minor_formatter(ScalarFormatter())
+ax.yaxis.set_major_formatter(ScalarFormatter())
+ax.yaxis.set_minor_formatter(ScalarFormatter())
 plt.minorticks_off()
-plt.xticks([5,10,20,50,100,300,500,700],[5,10,20,50,100,300,500,700])
+plt.yticks([5, 10, 20, 50, 100, 300, 500, 700], [5, 10, 20, 50, 100, 300, 500, 700])
 plt.grid(True)
-plt.savefig(f'{os.environ["FILESDIR"]}/images/{args.dataset}_{args.pos_class}v{args.neg_class}_CDF_step1.png')
+plt.savefig(f'{os.environ["FILESDIR"]}/images/{args.dataset}_{args.pos_class}v{args.neg_class}_test1_step1.png')
 
 # plt.figure(figsize=(12, 8))
 #

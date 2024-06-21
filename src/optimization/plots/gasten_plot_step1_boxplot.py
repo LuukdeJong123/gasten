@@ -85,7 +85,7 @@ plt.figure(figsize=(10, 5))
 box = plt.boxplot(
     [flatten_scores(grid_search_scores), flatten_scores(random_search_scores),
      flatten_scores(bayesian_optimization_scores), flatten_scores(hyperband_optimization_scores),
-     flatten_scores(BOHB_optimization_scores)],
+     flatten_scores(BOHB_optimization_scores)], patch_artist=True,
     labels=['Grid Search', 'Random Search', 'Bayesian Optimization', 'Hyperband', 'BOHB'])
 
 plt.ylabel('Frechet Inception Distance (FID)')

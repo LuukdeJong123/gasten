@@ -50,11 +50,11 @@ def load_json_scores(directory):
     return scores_fid, scores_cd
 
 # Load Random Search Scores
-directory_rs = f"{os.environ['FILESDIR']}/random_search_scores_{args.dataset}.{args.pos_class}v{args.neg_class}"
+directory_rs = f"{os.environ['FILESDIR']}/random_search_scores_step2_{args.dataset}.{args.pos_class}v{args.neg_class}"
 random_search_scores, random_search_cd = load_scores(directory_rs)
 
 # Load Grid Search Scores
-directory_gs = f"{os.environ['FILESDIR']}/grid_search_scores_{args.dataset}.{args.pos_class}v{args.neg_class}"
+directory_gs = f"{os.environ['FILESDIR']}/grid_search_scores_step2_{args.dataset}.{args.pos_class}v{args.neg_class}"
 grid_search_scores, grid_search_cd = load_scores(directory_gs)
 
 # Load Bayesian Optimization Scores
@@ -87,14 +87,14 @@ plt.suptitle(f'Boxplot of HPO Techniques {args.dataset} {args.pos_class}v{args.n
 
 plt.subplot(1, 2, 1)
 fid_data = [scores[0] for scores in all_scores]
-plt.boxplot(fid_data, labels=methods)
+plt.boxplot(fid_data, patch_artist=True, labels=methods)
 plt.xlabel('HPO Techniques')
 plt.ylabel('Frechet Inception Distance (FID)')
 
 # Boxplot for Confusion Distances
 plt.subplot(1, 2, 2)
 cd_data = [scores[1] for scores in all_scores]
-plt.boxplot(cd_data, labels=methods)
+plt.boxplot(cd_data, patch_artist=True, labels=methods)
 plt.xlabel('HPO Techniques')
 plt.ylabel('Confusion Distance (CD)')
 
