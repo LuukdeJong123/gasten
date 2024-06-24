@@ -119,8 +119,8 @@ def main():
     train_metrics.add('G_loss', iteration_metric=True)
     train_metrics.add('D_loss', iteration_metric=True)
 
-    if not os.path.exists(f"{os.environ['FILESDIR']}/random_search_scores_step2_{args.dataset}.{pos_class}v{neg_class}"):
-        os.makedirs(f"{os.environ['FILESDIR']}/random_search_scores_step2_{args.dataset}.{pos_class}v{neg_class}")
+    if not os.path.exists(f"{os.environ['FILESDIR']}/random_search_scores_{args.dataset}.{pos_class}v{neg_class}"):
+        os.makedirs(f"{os.environ['FILESDIR']}/random_search_scores_{args.dataset}.{pos_class}v{neg_class}")
 
     def random_search(param_distributions):
         time_limit = 288000

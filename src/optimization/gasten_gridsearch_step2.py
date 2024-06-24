@@ -139,8 +139,8 @@ def main():
     start_time = time.time()
     rng = np.random.RandomState(0)
 
-    if not os.path.exists(f"{os.environ['FILESDIR']}/grid_search_scores_step2_{args.dataset}.{pos_class}v{neg_class}"):
-        os.makedirs(f"{os.environ['FILESDIR']}/grid_search_scores_step2_{args.dataset}.{pos_class}v{neg_class}")
+    if not os.path.exists(f"{os.environ['FILESDIR']}/grid_search_scores_{args.dataset}.{pos_class}v{neg_class}"):
+        os.makedirs(f"{os.environ['FILESDIR']}/grid_search_scores_{args.dataset}.{pos_class}v{neg_class}")
 
     for params in tqdm(list(ParameterSampler(param_grid, n_iter=500, random_state=rng))):
         iteration += 1
