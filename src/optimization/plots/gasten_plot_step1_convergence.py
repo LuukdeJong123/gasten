@@ -74,8 +74,7 @@ BOHB_optimization_scores = load_json_scores(BOHB_directory)
 
 # Plot 1: Convergence Plot
 plt.figure(figsize=(10, 5))
-
-plt.plot(range(1, len(grid_search_scores) + 1), grid_search_scores, label='Grid search', color='blue')
+plt.plot(range(1, len(grid_search_scores) + 1), grid_search_scores, label='Random Grid search', color='blue')
 plt.plot(range(1, len(random_search_scores) + 1), random_search_scores, label='Random Search', color='green')
 plt.plot(range(1, len(bayesian_optimization_scores) + 1), bayesian_optimization_scores, label='Bayesian Optimization', color='orange')
 plt.plot(range(1, len(hyperband_optimization_scores) + 1), hyperband_optimization_scores, label='Hyperband', color='Red')

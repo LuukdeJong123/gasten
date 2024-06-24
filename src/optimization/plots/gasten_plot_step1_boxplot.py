@@ -61,23 +61,18 @@ def load_json_scores(directory):
                     scores.extend(json_data['eval']['fid'])
     return scores
 
-# Load Random Search Scores
 directory_rs = f"{os.environ['FILESDIR']}/random_search_scores_{args.dataset}.{args.pos_class}v{args.neg_class}"
 random_search_scores = load_scores(directory_rs)
 
-# Load Grid Search Scores
 directory_gs = f"{os.environ['FILESDIR']}/grid_search_scores_{args.dataset}.{args.pos_class}v{args.neg_class}"
 grid_search_scores = load_scores(directory_gs)
 
-# Load Bayesian Optimization Scores
 bayesian_directory = f"{os.environ['FILESDIR']}/out/bayesian_{args.dataset}-{args.pos_class}v{args.neg_class}/optimization"
 bayesian_optimization_scores = load_json_scores(bayesian_directory)
 
-# Load Hyperband Scores
 hyperband_directory = f"{os.environ['FILESDIR']}/out/hyperband_{args.dataset}-{args.pos_class}v{args.neg_class}/optimization"
 hyperband_optimization_scores = load_json_scores(hyperband_directory)
 
-# Load BOHB Scores
 BOHB_directory = f"{os.environ['FILESDIR']}/out/BOHB_{args.dataset}-{args.pos_class}v{args.neg_class}/optimization"
 BOHB_optimization_scores = load_json_scores(BOHB_directory)
 
@@ -86,13 +81,13 @@ box = plt.boxplot(
     [flatten_scores(grid_search_scores), flatten_scores(random_search_scores),
      flatten_scores(bayesian_optimization_scores), flatten_scores(hyperband_optimization_scores),
      flatten_scores(BOHB_optimization_scores)], patch_artist=True,
-    labels=['Grid Search', 'Random Search', 'Bayesian Optimization', 'Hyperband', 'BOHB'])
+    labels=['Random Grid Search', 'Random Search', 'Bayesian Optimization', 'Hyperband', 'BOHB'])
 
 plt.ylabel('Frechet Inception Distance (FID)')
 plt.title(f'Boxplot of FID Scores for {args.dataset} {args.pos_class}v{args.neg_class}: Step 1')
 
 
-def annotate_boxplot(boxplot, data):
+def annotate_boxplot(data):
     for i, d in enumerate(data, 1):
         min_val = np.min(d)
         max_val = np.max(d)
@@ -100,8 +95,7 @@ def annotate_boxplot(boxplot, data):
         plt.annotate(f'{max_val:.2f}', xy=(i, max_val), xytext=(i + 0.25, max_val + 10), ha='center', color='red')
 
 
-annotate_boxplot(box,
-                 [flatten_scores(grid_search_scores), flatten_scores(random_search_scores),
+annotate_boxplot([flatten_scores(grid_search_scores), flatten_scores(random_search_scores),
                   flatten_scores(bayesian_optimization_scores), flatten_scores(hyperband_optimization_scores),
                   flatten_scores(BOHB_optimization_scores)])
 

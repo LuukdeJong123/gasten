@@ -232,7 +232,7 @@ def main():
 
         elapsed_time = time.time() - start_time
         if elapsed_time > time_limit:
-            print("Time limit reached. Stopping the grid search.")
+            print("Time limit reached. Stopping the random grid search.")
             break
         iteration += 1
 

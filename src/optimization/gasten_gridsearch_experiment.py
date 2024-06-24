@@ -106,8 +106,6 @@ def main():
         'n_blocks': [3, 4, 5]
     }
 
-    # Training loop with grid search for hyperparameter optimization
-    best_score = float('-inf')
     iteration = 0
     param_scores = {}
     rng = np.random.RandomState(0)

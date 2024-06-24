@@ -74,10 +74,9 @@ hyperband_optimization_scores = load_json_scores(hyperband_directory)
 BOHB_directory = f"{os.environ['FILESDIR']}/out/BOHB_{args.dataset}-{args.pos_class}v{args.neg_class}/optimization"
 BOHB_optimization_scores = load_json_scores(BOHB_directory)
 
-# Prepare data for CDF plotting
 techniques = {
+    "Random Grid Search": np.array(grid_search_scores),
     "Random Search": np.array(random_search_scores),
-    "Grid Search": np.array(grid_search_scores),
     "Bayesian Optimization": np.array(bayesian_optimization_scores),
     "Hyperband": np.array(hyperband_optimization_scores),
     "BOHB": np.array(BOHB_optimization_scores)

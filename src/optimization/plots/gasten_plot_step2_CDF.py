@@ -70,12 +70,12 @@ BOHB_directory = f"{os.environ['FILESDIR']}/out/BOHB_{args.dataset}-{args.pos_cl
 BOHB_optimization_scores, BOHB_optimization_cd = load_json_scores(BOHB_directory)
 
 # Plotting the real data
-methods = ['Random Search', 'Grid Search', 'Bayesian Optimization', 'Hyperband', 'BOHB']
+methods = ['Random Grid Search', 'Random Search', 'Bayesian Optimization', 'Hyperband', 'BOHB']
 colors = ['blue', 'green', 'orange', 'red', 'purple']
 
 all_scores = [
-    (random_search_scores, random_search_cd),
     (grid_search_scores, grid_search_cd),
+    (random_search_scores, random_search_cd),
     (bayesian_optimization_scores, bayesian_optimization_cd),
     (hyperband_optimization_scores, hyperband_optimization_cd),
     (BOHB_optimization_scores, BOHB_optimization_cd)
