@@ -167,6 +167,7 @@ def main():
             ###
             # Sample images
             ###
+            #TODO i == 10
             with torch.no_grad():
                 G.eval()
                 fake = G(fixed_noise).detach().cpu()

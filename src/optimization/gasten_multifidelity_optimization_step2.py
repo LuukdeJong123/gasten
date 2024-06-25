@@ -308,7 +308,7 @@ def main():
     print(f"Knee point: {knee_point}")
 
     config_with_lowest_conf_dist = smac.intensifier.trajectory[len(smac.intensifier.trajectory) - 1].config_ids[knee_point_config]
-    with open(f'{os.environ["FILESDIR"]}/step-2-best-config-{args.dataset}-{pos_class}v{neg_class}.txt', 'w') as file:
+    with open(f'{os.environ["FILESDIR"]}/step-2-BOHB-best-config-{args.dataset}-{pos_class}v{neg_class}.txt', 'w') as file:
         file.write(os.path.join(cp_dir, str(config_with_lowest_conf_dist)) + '\n')
         for incumbent in incumbents:
             if config_with_lowest_conf_dist == incumbent.config_id:

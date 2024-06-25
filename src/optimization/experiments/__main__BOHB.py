@@ -1,17 +1,9 @@
-import itertools
 import subprocess
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 import os
-from tqdm import tqdm
-from torch.utils.data import TensorDataset, DataLoader
-import json
-import torch
 
-from src.utils import create_and_store_z, gen_seed, set_seed
+from src.utils import gen_seed, set_seed
 from dotenv import load_dotenv
-from src.utils.config import read_config_clustering
-from src.clustering.generate_embeddings import load_gasten
-from src.utils.config import read_config
 
 load_dotenv()
 parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
@@ -74,9 +66,9 @@ def main():
 
     fid_stats_path = f"{os.environ['FILESDIR']}/data/fid-stats/stats.inception.{args.dataset}.{pos_class}v{neg_class}.npz"
 
-    # subprocess.run(['python3', '-m', 'src.optimization.gasten_multifidelity_optimization_step1',
-    #                 '--config', args.config_path_optim, '--pos', pos_class, '--neg', neg_class,
-    #                 '--dataset', args.dataset, '--fid-stats', fid_stats_path])
+    subprocess.run(['python3', '-m', 'src.optimization.gasten_multifidelity_optimization_step1',
+                    '--config', args.config_path_optim, '--pos', pos_class, '--neg', neg_class,
+                    '--dataset', args.dataset, '--fid-stats', fid_stats_path])
 
     classifiers = os.listdir(os.path.join(os.environ['FILESDIR'], 'models', f"{args.dataset}.{pos_class}v{neg_class}"))
     classifier_paths = ",".join(

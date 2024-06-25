@@ -68,27 +68,24 @@ random_search_scores, random_search_cd = load_scores(directory_rs)
 directory_gs = f"{os.environ['FILESDIR']}/grid_search_scores_{args.dataset}.{args.pos_class}v{args.neg_class}"
 grid_search_scores, grid_search_cd = load_scores(directory_gs)
 
-# bayesian_directory = f"{os.environ['FILESDIR']}/out/bayesian_{args.dataset}-{args.pos_class}v{args.neg_class}/optimization"
-# bayesian_optimization_scores, bayesian_optimization_cd = load_json_scores(bayesian_directory)
-#
-# hyperband_directory = f"{os.environ['FILESDIR']}/out/hyperband_{args.dataset}-{args.pos_class}v{args.neg_class}/optimization"
-# hyperband_optimization_scores, hyperband_optimization_cd = load_json_scores(hyperband_directory)
-#
-# BOHB_directory = f"{os.environ['FILESDIR']}/out/BOHB_{args.dataset}-{args.pos_class}v{args.neg_class}/optimization"
-# BOHB_optimization_scores, BOHB_optimization_cd = load_json_scores(BOHB_directory)
+bayesian_directory = f"{os.environ['FILESDIR']}/out/bayesian_{args.dataset}-{args.pos_class}v{args.neg_class}/optimization"
+bayesian_optimization_scores, bayesian_optimization_cd = load_json_scores(bayesian_directory)
 
-methods = ['Random Grid Search', 'Random Search']
-colors = ['blue', 'green']
+hyperband_directory = f"{os.environ['FILESDIR']}/out/hyperband_{args.dataset}-{args.pos_class}v{args.neg_class}/optimization"
+hyperband_optimization_scores, hyperband_optimization_cd = load_json_scores(hyperband_directory)
 
-# methods = ['Random Grid Search', 'Random Search', 'Bayesian Optimization', 'Hyperband', 'BOHB']
-# colors = ['blue', 'green', 'orange', 'red', 'purple']
+BOHB_directory = f"{os.environ['FILESDIR']}/out/BOHB_{args.dataset}-{args.pos_class}v{args.neg_class}/optimization"
+BOHB_optimization_scores, BOHB_optimization_cd = load_json_scores(BOHB_directory)
+
+methods = ['Random Grid Search', 'Random Search', 'Bayesian Optimization', 'Hyperband', 'BOHB']
+colors = ['blue', 'green', 'orange', 'red', 'purple']
 
 all_scores = [
     (grid_search_scores, grid_search_cd),
     (random_search_scores, random_search_cd),
-    # (bayesian_optimization_scores, bayesian_optimization_cd),
-    # (hyperband_optimization_scores, hyperband_optimization_cd),
-    # (BOHB_optimization_scores, BOHB_optimization_cd)
+    (bayesian_optimization_scores, bayesian_optimization_cd),
+    (hyperband_optimization_scores, hyperband_optimization_cd),
+    (BOHB_optimization_scores, BOHB_optimization_cd)
 ]
 
 plt.figure(figsize=(10, 6))

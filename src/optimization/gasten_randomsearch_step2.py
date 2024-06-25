@@ -132,7 +132,6 @@ def main():
                 param: distribution.rvs() if param != 'classifier' else random.choice(param_distributions['classifier'])
                 for param, distribution in param_distributions.items()}
 
-            # Replace this part with your model training and evaluation
             evaluate_model_with_params(params, i)
 
             elapsed_time = time.time() - start_time

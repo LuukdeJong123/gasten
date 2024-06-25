@@ -113,7 +113,7 @@ def main():
     for params in tqdm(list(ParameterSampler(param_grid, n_iter=1, random_state=rng))):
         iteration += 1
         for j in range(10):
-            seed = random.randint(0, 2**32 - 1)
+            seed = random.randint(0, 2 ** 32 - 1)
             setup_reprod(seed)
             # current_score = float('-inf')
             config['model']["architecture"]['g_num_blocks'] = params['n_blocks']
@@ -181,7 +181,7 @@ def main():
                         if curr_g_iter % log_every_g_iter == 0 or \
                                 curr_g_iter == g_iters_per_epoch:
                             print('[%d/%d][%d/%d]\tG loss: %.4f %s; D loss: %.4f %s'
-                                  % (epoch, epochs-1, curr_g_iter, g_iters_per_epoch, g_loss.item(),
+                                  % (epoch, epochs - 1, curr_g_iter, g_iters_per_epoch, g_loss.item(),
                                      loss_terms_to_str(g_loss_terms), d_loss.item(),
                                      loss_terms_to_str(d_loss_terms)))
 
@@ -207,9 +207,12 @@ def main():
                          test_noise, device, None)
 
                 eval_metrics.finalize_epoch()
-                current_score = eval_metrics.stats['fid'][epoch-1]
-                param_scores[epoch-1] = current_score
+                current_score = eval_metrics.stats['fid'][epoch - 1]
+                param_scores[epoch - 1] = current_score
 
-            torch.save(param_scores, f"{os.environ['FILESDIR']}/grid_search_scores/param_scores_grid_search_step1_{pos_class}v{neg_class}_config_{iteration}_seed_{j}.pt")
+            torch.save(param_scores,
+                       f"{os.environ['FILESDIR']}/grid_search_scores/param_scores_grid_search_step1_{pos_class}v{neg_class}_config_{iteration}_seed_{j}.pt")
+
+
 if __name__ == '__main__':
     main()

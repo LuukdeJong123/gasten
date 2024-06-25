@@ -91,6 +91,7 @@ def main():
                         '--device', args.device,
                         '--pos', pos_class, '--neg', neg_class])
 
+
     if not os.path.exists(f"{os.environ['FILESDIR']}/models/{args.dataset}.{pos_class}v{neg_class}"):
         print(f"\nGenerating classifiers for {pos_class}v{neg_class} ...")
         for clf_type, nf, epochs in itertools.product(l_clf_type, l_nf, l_epochs):
@@ -128,6 +129,82 @@ def main():
     subprocess.run(['python3', '-m', 'src.optimization.gasten_multifidelity_optimization_step2',
                     '--config', args.config_path_optim, '--classifiers', classifier_paths, '--pos', pos_class,
                     '--neg', neg_class, '--dataset', args.dataset, '--fid-stats', fid_stats_path])
+
+
+    with open(f'{os.environ["FILESDIR"]}/step-2-best-config-{args.dataset}-{pos_class}v{neg_class}.txt', 'r') as file:
+        lines = file.read().splitlines()
+        gan_path = lines[0]
+        best_config_optim = json.loads(lines[1].replace("'", '"'))
+
+    config_optim = read_config(args.config_path_optim)
+    config_optim["project"] = f"{config_optim['project']}-{pos_class}v{neg_class}"
+    config_clustering = read_config_clustering(args.config_path_clustering)
+
+    config_clustering['dataset']['name'] = args.dataset
+    config_clustering['dataset']['binary']['pos'] = pos_class
+    config_clustering['dataset']['binary']['neg'] = neg_class
+    config_clustering['dir']['fid-stats'] = fid_stats_path
+    config_clustering['gasten']['gan_path'] = gan_path
+    config_clustering['gasten']['weight'] = best_config_optim['weight']
+    gan_path_splitted = gan_path.split('/')
+    config_clustering['gasten']['run-id'] = gan_path_splitted[len(gan_path_splitted) - 2]
+    config_clustering["project"] = f"{config_clustering['project']}-{pos_class}v{neg_class}"
+
+    netG, C, C_emb, classifier_name = load_gasten(config_clustering, best_config_optim['classifier'], best_config_optim)
+
+    device = config_clustering["device"]
+    batch_size = config_clustering['batch-size']
+
+    config_run = {
+        'step': 'image_generation',
+        'classifier_name': classifier_name,
+        'gasten': {
+            'epoch1': config_clustering['gasten']['epoch']['step-1'],
+            'epoch2': config_clustering['gasten']['epoch']['step-2'],
+            'weight': config_clustering['gasten']['weight']
+        },
+        'probabilities': {
+            'min': 0.5 - config_clustering['clustering']['acd'],
+            'max': 0.5 + config_clustering['clustering']['acd']
+        },
+        'generated_images': config_clustering['clustering']['fixed-noise']
+    }
+
+    # Initialize variables
+    images_array = []
+    syn_images_f = torch.empty(0)  # Initialize empty tensor
+
+    while len(syn_images_f) < 1751:
+        test_noise = torch.randn(config_run['generated_images'], config_clustering["clustering"]["z-dim"],
+                                 device=device)
+        noise_loader = DataLoader(TensorDataset(test_noise), batch_size=batch_size, shuffle=False)
+
+        images_array.clear()
+
+        for idx, batch in enumerate(tqdm(noise_loader, desc='Evaluating fake images')):
+            with torch.no_grad():
+                netG.eval()
+                batch_images = netG(*batch)
+
+            images_array.append(batch_images)
+
+        images = torch.cat(images_array, dim=0)
+
+        with torch.no_grad():
+            pred = C(images).cpu().detach().numpy()
+
+        mask = (pred >= config_run['probabilities']['min']) & (pred <= config_run['probabilities']['max'])
+        filtered_images = images[mask]
+
+        syn_images_f = torch.cat([syn_images_f.to(device), filtered_images.to(device)], dim=0)
+
+    shuffled_indices = torch.randperm(syn_images_f.size(0))
+    syn_images_f_shuffled = syn_images_f[shuffled_indices]
+
+    sampled_images = syn_images_f_shuffled[:1750]
+
+    #Save
+    save(config_optim, sampled_images, f"{args.dataset}_{pos_class}v{neg_class}")
 
 
 if __name__ == '__main__':
