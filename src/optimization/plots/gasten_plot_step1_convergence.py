@@ -19,7 +19,10 @@ def parse_args():
 
 
 def get_immediate_subdirectories(directory):
-    return [name for name in os.listdir(directory) if os.path.isdir(os.path.join(directory, name))]
+    subdirs = [name for name in os.listdir(directory) if os.path.isdir(os.path.join(directory, name))]
+    subdirs_with_mtime = [(name, os.path.getmtime(os.path.join(directory, name))) for name in subdirs]
+    subdirs_sorted_by_age = sorted(subdirs_with_mtime, key=lambda x: x[1])
+    return [name for name, mtime in subdirs_sorted_by_age]
 
 
 def load_pt_files(directory):
@@ -39,7 +42,7 @@ def load_pt_files(directory):
 def load_json_scores(directory):
     scores = []
     sub_subdirectories = get_immediate_subdirectories(directory)
-    sub_subdirectory_path = os.path.join(directory, sub_subdirectories[1])
+    sub_subdirectory_path = os.path.join(directory, sub_subdirectories[0])
     for root, dirs, files in os.walk(sub_subdirectory_path):
         for file in files:
             if file == "stats.json":

@@ -6,6 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from dotenv import load_dotenv
 
+
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--pos', dest='pos_class', default=9,
@@ -16,11 +17,17 @@ def parse_args():
                         default='mnist', help='Dataset (mnist or fashion-mnist or cifar10)')
     return parser.parse_args()
 
+
 def get_immediate_subdirectories(directory):
-    return [name for name in os.listdir(directory) if os.path.isdir(os.path.join(directory, name))]
+    subdirs = [name for name in os.listdir(directory) if os.path.isdir(os.path.join(directory, name))]
+    subdirs_with_mtime = [(name, os.path.getmtime(os.path.join(directory, name))) for name in subdirs]
+    subdirs_sorted_by_age = sorted(subdirs_with_mtime, key=lambda x: x[1])
+    return [name for name, mtime in subdirs_sorted_by_age]
+
 
 load_dotenv()
 args = parse_args()
+
 
 def load_scores(directory, extension=".pt"):
     scores_fid = []
@@ -34,11 +41,12 @@ def load_scores(directory, extension=".pt"):
                 scores_cd.append(values[1])
     return scores_fid, scores_cd
 
+
 def load_json_scores(directory):
     scores_fid = []
     scores_cd = []
     sub_subdirectories = get_immediate_subdirectories(directory)
-    sub_subdirectory_path = os.path.join(directory, sub_subdirectories[0])
+    sub_subdirectory_path = os.path.join(directory, sub_subdirectories[1])
     for root, dirs, files in os.walk(sub_subdirectory_path):
         for file in files:
             if file == "stats.json":
@@ -48,6 +56,7 @@ def load_json_scores(directory):
                     scores_fid.extend(json_data['eval']['fid'])
                     scores_cd.extend(json_data['eval']['conf_dist'])
     return scores_fid, scores_cd
+
 
 directory_rs = f"{os.environ['FILESDIR']}/random_search_scores_{args.dataset}.{args.pos_class}v{args.neg_class}"
 random_search_scores, random_search_cd = load_scores(directory_rs)
@@ -101,4 +110,3 @@ plt.grid(True)
 
 plt.tight_layout()
 plt.savefig(f'{os.environ["FILESDIR"]}/images/{args.dataset}_{args.pos_class}v{args.neg_class}_CDF_step2.png')
-
