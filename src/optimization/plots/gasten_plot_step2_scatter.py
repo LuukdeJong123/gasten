@@ -51,7 +51,7 @@ def load_json_scores(directory):
     scores_fid = []
     scores_cd = []
     sub_subdirectories = get_immediate_subdirectories(directory)
-    sub_subdirectory_path = os.path.join(directory, sub_subdirectories[1])
+    sub_subdirectory_path = os.path.join(directory, sub_subdirectories[0])
     for root, dirs, files in os.walk(sub_subdirectory_path):
         for file in files:
             if file == "stats.json":

@@ -286,7 +286,7 @@ def main():
 
     objectives = ["fid", "confusion_distance"]
 
-    scenario = Scenario(configspace, objectives=objectives, deterministic=True, walltime_limit=288000, n_trials=500)
+    scenario = Scenario(configspace, objectives=objectives, deterministic=True, walltime_limit=288000, n_trials=10000)
     multi_objective_algorithm = ParEGO(scenario)
     smac = HyperparameterOptimizationFacade(scenario, train, multi_objective_algorithm=multi_objective_algorithm, overwrite=True)
     incumbents = smac.optimize()
