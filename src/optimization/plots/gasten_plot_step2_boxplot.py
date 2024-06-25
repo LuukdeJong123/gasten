@@ -56,36 +56,33 @@ def load_json_scores(directory):
                     scores_cd.extend(json_data['eval']['conf_dist'])
     return scores_fid, scores_cd
 
-# Load Random Search Scores
 directory_rs = f"{os.environ['FILESDIR']}/random_search_scores_step2_{args.dataset}.{args.pos_class}v{args.neg_class}"
 random_search_scores, random_search_cd = load_scores(directory_rs)
 
-# Load Grid Search Scores
 directory_gs = f"{os.environ['FILESDIR']}/grid_search_scores_step2_{args.dataset}.{args.pos_class}v{args.neg_class}"
 grid_search_scores, grid_search_cd = load_scores(directory_gs)
 
-# Load Bayesian Optimization Scores
-bayesian_directory = f"{os.environ['FILESDIR']}/out/bayesian_{args.dataset}-{args.pos_class}v{args.neg_class}/optimization"
-bayesian_optimization_scores, bayesian_optimization_cd = load_json_scores(bayesian_directory)
+# bayesian_directory = f"{os.environ['FILESDIR']}/out/bayesian_{args.dataset}-{args.pos_class}v{args.neg_class}/optimization"
+# bayesian_optimization_scores, bayesian_optimization_cd = load_json_scores(bayesian_directory)
+#
+# hyperband_directory = f"{os.environ['FILESDIR']}/out/hyperband_{args.dataset}-{args.pos_class}v{args.neg_class}/optimization"
+# hyperband_optimization_scores, hyperband_optimization_cd = load_json_scores(hyperband_directory)
+#
+# BOHB_directory = f"{os.environ['FILESDIR']}/out/BOHB_{args.dataset}-{args.pos_class}v{args.neg_class}/optimization"
+# BOHB_optimization_scores, BOHB_optimization_cd = load_json_scores(BOHB_directory)
 
-# Load Hyperband Scores
-hyperband_directory = f"{os.environ['FILESDIR']}/out/hyperband_{args.dataset}-{args.pos_class}v{args.neg_class}/optimization"
-hyperband_optimization_scores, hyperband_optimization_cd = load_json_scores(hyperband_directory)
+methods = ['Random Grid Search', 'Random Search']
+colors = ['blue', 'green']
 
-# Load BOHB Scores
-BOHB_directory = f"{os.environ['FILESDIR']}/out/BOHB_{args.dataset}-{args.pos_class}v{args.neg_class}/optimization"
-BOHB_optimization_scores, BOHB_optimization_cd = load_json_scores(BOHB_directory)
-
-# Plotting the real data
-methods = ['Random Grid Search', 'Random Search', 'Bayesian Optimization', 'Hyperband', 'BOHB']
-colors = ['blue', 'orange', 'green', 'red', 'purple']
+# methods = ['Random Grid Search', 'Random Search', 'Bayesian Optimization', 'Hyperband', 'BOHB']
+# colors = ['blue', 'green', 'orange', 'red', 'purple']
 
 all_scores = [
     (grid_search_scores, grid_search_cd),
     (random_search_scores, random_search_cd),
-    (bayesian_optimization_scores, bayesian_optimization_cd),
-    (hyperband_optimization_scores, hyperband_optimization_cd),
-    (BOHB_optimization_scores, BOHB_optimization_cd)
+    # (bayesian_optimization_scores, bayesian_optimization_cd),
+    # (hyperband_optimization_scores, hyperband_optimization_cd),
+    # (BOHB_optimization_scores, BOHB_optimization_cd)
 ]
 
 # Boxplot for FID Scores
