@@ -49,10 +49,10 @@ def load_json_scores(directory):
                     scores_cd.extend(json_data['eval']['conf_dist'])
     return scores_fid, scores_cd
 
-directory_rs = f"{os.environ['FILESDIR']}/random_search_scores_step2_{args.dataset}.{args.pos_class}v{args.neg_class}"
+directory_rs = f"{os.environ['FILESDIR']}/random_search_scores_{args.dataset}.{args.pos_class}v{args.neg_class}"
 random_search_scores, random_search_cd = load_scores(directory_rs)
 
-directory_gs = f"{os.environ['FILESDIR']}/grid_search_scores_step2_{args.dataset}.{args.pos_class}v{args.neg_class}"
+directory_gs = f"{os.environ['FILESDIR']}/grid_search_scores_{args.dataset}.{args.pos_class}v{args.neg_class}"
 grid_search_scores, grid_search_cd = load_scores(directory_gs)
 
 # bayesian_directory = f"{os.environ['FILESDIR']}/out/bayesian_{args.dataset}-{args.pos_class}v{args.neg_class}/optimization"
