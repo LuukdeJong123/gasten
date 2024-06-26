@@ -5,6 +5,7 @@ import torch
 import numpy as np
 import matplotlib.pyplot as plt
 from dotenv import load_dotenv
+from matplotlib.ticker import ScalarFormatter
 
 
 def parse_args():
@@ -26,8 +27,8 @@ def annotate_boxplot(data):
     for i, d in enumerate(data, 1):
         min_val = np.min(d)
         max_val = np.max(d)
-        plt.annotate(f'{min_val:.2f}', xy=(i, min_val), xytext=(i - 0.25, min_val - 10), ha='center', color='blue')
-        plt.annotate(f'{max_val:.2f}', xy=(i, max_val), xytext=(i + 0.25, max_val + 10), ha='center', color='red')
+        plt.annotate(f'{min_val:.2f}', xy=(i, min_val), xytext=(i - 0.1, min_val - 1.5), ha='center', color='blue')
+        plt.annotate(f'{max_val:.2f}', xy=(i, max_val), xytext=(i + 0.1, max_val + 1.5), ha='center', color='red')
 
 
 def get_immediate_subdirectories(directory):
@@ -99,16 +100,15 @@ plt.suptitle(f'Boxplot of HPO Techniques {args.dataset} {args.pos_class}v{args.n
 plt.subplot(1, 2, 1)
 fid_data = [scores[0] for scores in all_scores]
 plt.boxplot(fid_data, patch_artist=True, labels=methods)
-plt.xlabel('HPO Techniques')
 plt.ylabel('Frechet Inception Distance (FID)')
+plt.xticks(rotation=15)
 annotate_boxplot(fid_data)
 
-# Boxplot for Confusion Distances
 plt.subplot(1, 2, 2)
 cd_data = [scores[1] for scores in all_scores]
 plt.boxplot(cd_data, patch_artist=True, labels=methods)
-plt.xlabel('HPO Techniques')
 plt.ylabel('Confusion Distance (CD)')
+plt.xticks(rotation=15)
 annotate_boxplot(cd_data)
 
 plt.tight_layout()
