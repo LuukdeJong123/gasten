@@ -106,7 +106,7 @@ ax.yaxis.set_minor_formatter(ScalarFormatter())
 plt.minorticks_off()
 plt.yticks([5, 10, 20, 50, 100, 300, 500, 700], [5, 10, 20, 50, 100, 300, 500, 700])
 plt.grid(True)
-plt.savefig(f'{os.environ["FILESDIR"]}/images/{args.dataset}_{args.pos_class}v{args.neg_class}_step1.png')
+plt.savefig(f'{os.environ["FILESDIR"]}/images/{args.dataset}_{args.pos_class}v{args.neg_class}_CDF_step1.png')
 
 # plt.figure(figsize=(12, 8))
 #
