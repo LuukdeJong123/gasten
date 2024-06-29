@@ -36,17 +36,15 @@ def load_scores(directory, extension=".pt"):
         if filename.endswith(extension) and 'step2' in filename:
             filepath = os.path.join(directory, filename)
             data = torch.load(filepath)
-            for values in data.values():
-                last_value_fid = values[0][len(values[0]) - 1]
-                if len(scores_fid) > 0 and last_value_fid > scores_fid[-1]:
-                    scores_fid.append(scores_fid[-1])
-                else:
-                    scores_fid.append(last_value_fid)
-                last_value_cd = values[1][len(values[1]) - 1]
-                if len(scores_cd) > 0 and last_value_cd > scores_cd[-1]:
-                    scores_cd.append(scores_fid[-1])
-                else:
-                    scores_cd.append(last_value_cd)
+            last_value = list(data.values())[len(data.keys()) - 1]
+            if len(scores_fid) > 0 and last_value[0] > scores_fid[-1]:
+                scores_fid.append(scores_fid[-1])
+            else:
+                scores_fid.append(last_value[0])
+            if len(scores_cd) > 0 and last_value[1] > scores_cd[-1]:
+                scores_cd.append(scores_fid[-1])
+            else:
+                scores_cd.append(last_value[1])
     return scores_fid, scores_cd
 
 
