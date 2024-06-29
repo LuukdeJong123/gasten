@@ -122,7 +122,4 @@ for i, method in enumerate(methods):
     plt.tight_layout()
 
     scatter_plot_filename = f'{os.environ["FILESDIR"]}/images/{args.dataset}_{args.pos_class}v{args.neg_class}_{method.replace(" ", "_")}_scatter_step2.png'
-    hexbin_plot_filename = f'{os.environ["FILESDIR"]}/images/{args.dataset}_{args.pos_class}v{args.neg_class}_{method.replace(" ", "_")}_hexbin_step2.png'
-
     plt.savefig(scatter_plot_filename)
-    plt.savefig(hexbin_plot_filename)

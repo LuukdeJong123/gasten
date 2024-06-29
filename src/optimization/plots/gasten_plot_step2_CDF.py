@@ -42,7 +42,7 @@ def load_scores(directory, extension=".pt"):
             else:
                 scores_fid.append(last_value[0])
             if len(scores_cd) > 0 and last_value[1] > scores_cd[-1]:
-                scores_cd.append(scores_fid[-1])
+                scores_cd.append(scores_cd[-1])
             else:
                 scores_cd.append(last_value[1])
     return scores_fid, scores_cd
@@ -52,7 +52,7 @@ def load_json_scores(directory):
     scores_fid = []
     scores_cd = []
     sub_subdirectories = get_immediate_subdirectories(directory)
-    sub_subdirectory_path = os.path.join(directory, sub_subdirectories[0])
+    sub_subdirectory_path = os.path.join(directory, sub_subdirectories[1])
     for root, dirs, files in os.walk(sub_subdirectory_path):
         for file in files:
             if file == "stats.json":
@@ -102,9 +102,9 @@ plt.figure(figsize=(14, 7))
 plt.suptitle(f'CDF of HPO Techniques {args.dataset} {args.pos_class}v{args.neg_class}: Step 2', fontsize=16)
 plt.subplot(1, 2, 1)
 for i, method in enumerate(methods):
-    sorted_data = np.sort(np.array(all_scores[i][0]).flatten())
-    cdf = np.arange(1, len(sorted_data) + 1) / len(sorted_data)
-    plt.plot(cdf * 100, sorted_data, label=method, color=colors[i])
+    sorted_fid = np.sort(np.array(all_scores[i][0]).flatten())
+    cdf = np.arange(1, len(sorted_fid) + 1) / len(sorted_fid)
+    plt.plot(cdf * 100, sorted_fid, label=method, color=colors[i])
 plt.ylabel('Frechet Inception Distance (FID)')
 plt.xlabel('Percentage of Iterations (%)')
 plt.legend()
@@ -113,9 +113,9 @@ plt.grid(True)
 # Confusion Distance CDF
 plt.subplot(1, 2, 2)
 for i, method in enumerate(methods):
-    sorted_data = np.sort(np.array(all_scores[i][1]).flatten())
-    cdf = np.arange(1, len(sorted_data) + 1) / len(sorted_data)
-    plt.plot(cdf * 100, sorted_data, label=method, color=colors[i])
+    sorted_cd = np.sort(np.array(all_scores[i][1]).flatten())
+    cdf = np.arange(1, len(sorted_cd) + 1) / len(sorted_cd)
+    plt.plot(cdf * 100, sorted_cd, label=method, color=colors[i])
 plt.ylabel('Confusion Distance (CD)')
 plt.xlabel('Percentage of Iterations (%)')
 plt.legend()
