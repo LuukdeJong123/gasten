@@ -37,8 +37,16 @@ def load_scores(directory, extension=".pt"):
             filepath = os.path.join(directory, filename)
             data = torch.load(filepath)
             for values in data.values():
-                scores_fid.append(values[0])
-                scores_cd.append(values[1])
+                last_value_fid = values[0][len(values[0]) - 1]
+                if len(scores_fid) > 0 and last_value_fid > scores_fid[-1]:
+                    scores_fid.append(scores_fid[-1])
+                else:
+                    scores_fid.append(last_value_fid)
+                last_value_cd = values[1][len(values[1]) - 1]
+                if len(scores_cd) > 0 and last_value_cd > scores_cd[-1]:
+                    scores_cd.append(scores_fid[-1])
+                else:
+                    scores_cd.append(last_value_cd)
     return scores_fid, scores_cd
 
 
@@ -46,17 +54,24 @@ def load_json_scores(directory):
     scores_fid = []
     scores_cd = []
     sub_subdirectories = get_immediate_subdirectories(directory)
-    sub_subdirectory_path = os.path.join(directory, sub_subdirectories[1])
+    sub_subdirectory_path = os.path.join(directory, sub_subdirectories[0])
     for root, dirs, files in os.walk(sub_subdirectory_path):
         for file in files:
             if file == "stats.json":
                 json_file_path = os.path.join(root, file)
                 with open(json_file_path) as json_file:
                     json_data = json.load(json_file)
-                    scores_fid.extend(json_data['eval']['fid'])
-                    scores_cd.extend(json_data['eval']['conf_dist'])
+                    last_score_fid = json_data['eval']['fid'][len(json_data['eval']['fid']) - 1]
+                    if len(scores_fid) > 0 and last_score_fid > scores_fid[-1]:
+                        scores_fid.append(scores_fid[-1])
+                    else:
+                        scores_fid.append(last_score_fid)
+                    last_score_cd = json_data['eval']['conf_dist'][len(json_data['eval']['conf_dist']) - 1]
+                    if len(scores_cd) > 0 and last_score_cd > scores_cd[-1]:
+                        scores_cd.append(scores_cd[-1])
+                    else:
+                        scores_cd.append(last_score_cd)
     return scores_fid, scores_cd
-
 
 directory_rs = f"{os.environ['FILESDIR']}/random_search_scores_{args.dataset}.{args.pos_class}v{args.neg_class}"
 random_search_scores, random_search_cd = load_scores(directory_rs)

@@ -91,18 +91,38 @@ all_scores = [
     (BOHB_optimization_scores, BOHB_optimization_cd)
 ]
 
-plt.figure(figsize=(10, 6))
 for i, method in enumerate(methods):
     fid_scores, confusion_distances = all_scores[i]
-    plt.scatter(fid_scores, confusion_distances, color=colors[i], label=method, alpha=0.6)
+    color = colors[i]
 
-plt.xlabel('Frechet Inception Distance (FID)')
-plt.ylabel('Confusion Distance (CD)')
-plt.title('FID vs. CD for HPO Techniques: Step 2')
-ax = plt.gca()
-ax.xaxis.set_major_formatter(ScalarFormatter())
-plt.minorticks_off()
-plt.xticks([0,5,10,15,20,25,30,35,40,60,70],[0,5,10,15,20,25,30,35,40,60,70])
-plt.legend()
-plt.grid(True)
-plt.savefig(f'{os.environ["FILESDIR"]}/images/{args.dataset}_{args.pos_class}v{args.neg_class}_scatter_step2.png')
+    # Scatter plot
+    plt.figure(figsize=(12, 5))
+    plt.subplot(1, 2, 1)
+    plt.scatter(fid_scores, confusion_distances, color=color, alpha=0.6)
+    plt.xlabel('Frechet Inception Distance (FID)')
+    plt.ylabel('Confusion Distance (CD)')
+    plt.title('FID vs. CD for HPO Techniques: Step 2')
+    ax = plt.gca()
+    ax.xaxis.set_major_formatter(ScalarFormatter())
+    plt.minorticks_off()
+    plt.xticks([0, 5, 10, 15, 20, 25, 30, 35, 40, 60, 70], [0, 5, 10, 15, 20, 25, 30, 35, 40, 60, 70])
+    plt.legend()
+    plt.title(f'Scatter Plot: {method}')
+    plt.grid(True)
+    plt.tight_layout()
+
+    # Hexbin plot
+    plt.subplot(1, 2, 2)
+    hb = plt.hexbin(fid_scores, confusion_distances, gridsize=20, cmap='Blues')
+    plt.xlabel('Frechet Inception Distance (FID)')
+    plt.ylabel('Confusion Distance (CD)')
+    plt.title(f'Hexbin Plot: {method}')
+    plt.grid(True)
+    plt.colorbar(hb)
+    plt.tight_layout()
+
+    scatter_plot_filename = f'{os.environ["FILESDIR"]}/images/{args.dataset}_{args.pos_class}v{args.neg_class}_{method.replace(" ", "_")}_scatter_step2.png'
+    hexbin_plot_filename = f'{os.environ["FILESDIR"]}/images/{args.dataset}_{args.pos_class}v{args.neg_class}_{method.replace(" ", "_")}_hexbin_step2.png'
+
+    plt.savefig(scatter_plot_filename)
+    plt.savefig(hexbin_plot_filename)
