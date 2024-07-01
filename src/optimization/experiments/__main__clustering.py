@@ -176,7 +176,7 @@ def main():
 
     netG, C, C_emb, classifier_name = load_gasten(config_clustering, best_config_optim['classifier'], best_config_optim)
 
-    for i in range(10):
+    for i in range(20):
         # generate images
         syn_images_f, syn_embeddings_f = generate_embeddings(config_clustering, netG, C, C_emb, classifier_name)
 

@@ -6,6 +6,8 @@ import numpy as np
 import argparse
 from dotenv import load_dotenv
 from matplotlib.ticker import ScalarFormatter
+import random
+
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -91,9 +93,20 @@ all_scores = [
     (BOHB_optimization_scores, BOHB_optimization_cd)
 ]
 
+
+def select_random_subset(fid_scores, confusion_distances, subset_size=5000):
+    if len(fid_scores) > subset_size:
+        indices = random.sample(range(len(fid_scores)), subset_size)
+        fid_scores = [fid_scores[i] for i in indices]
+        confusion_distances = [confusion_distances[i] for i in indices]
+    return fid_scores, confusion_distances
+
 for i, method in enumerate(methods):
     fid_scores, confusion_distances = all_scores[i]
     color = colors[i]
+
+    # Select a random subset of points
+    fid_scores, confusion_distances = select_random_subset(fid_scores, confusion_distances)
 
     # Scatter plot
     plt.figure(figsize=(12, 5))
@@ -106,7 +119,6 @@ for i, method in enumerate(methods):
     ax.xaxis.set_major_formatter(ScalarFormatter())
     plt.minorticks_off()
     plt.xticks([0, 5, 10, 15, 20, 25, 30, 35, 40, 60, 70], [0, 5, 10, 15, 20, 25, 30, 35, 40, 60, 70])
-    plt.legend()
     plt.title(f'Scatter Plot: {method}')
     plt.grid(True)
     plt.tight_layout()
