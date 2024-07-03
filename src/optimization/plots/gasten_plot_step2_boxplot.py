@@ -107,7 +107,7 @@ annotate_boxplot(fid_data)
 plt.subplot(1, 2, 2)
 cd_data = [scores[1] for scores in all_scores]
 plt.boxplot(cd_data, patch_artist=True, labels=methods)
-plt.ylabel('Confusion Distance (CD)')
+plt.ylabel('Average Confusion Distance (CD)')
 plt.xticks(rotation=15)
 annotate_boxplot(cd_data)
 

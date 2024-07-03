@@ -116,7 +116,7 @@ for i, method in enumerate(methods):
     sorted_cd = np.sort(np.array(all_scores[i][1]).flatten())
     cdf = np.arange(1, len(sorted_cd) + 1) / len(sorted_cd)
     plt.plot(cdf * 100, sorted_cd, label=method, color=colors[i])
-plt.ylabel('Confusion Distance (CD)')
+plt.ylabel('Average Confusion Distance (ACD)')
 plt.xlabel('Percentage of Iterations (%)')
 plt.legend()
 plt.grid(True)
