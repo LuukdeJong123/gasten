@@ -92,31 +92,16 @@ i = 0
 for name, data in techniques.items():
     sorted_data = np.sort(np.array(data).flatten())
     cdf = np.arange(1, len(sorted_data) + 1) / len(sorted_data)
-    plt.plot(cdf * 100, sorted_data, label=name, color=colors[i])
+    plt.plot(sorted_data, cdf * 100, label=name, color=colors[i])
     i += 1
 
-plt.xlabel('Percentage of Iterations (%)')
-plt.ylabel('FID')
+plt.ylabel('Percentage of Iterations (%)')
+plt.xlabel('FID')
 plt.title(f'Performance of HPO Techniques {args.dataset} {args.pos_class}v{args.neg_class}: Step 1')
-plt.legend()
-plt.yscale('log')
 ax = plt.gca()
-ax.yaxis.set_major_formatter(ScalarFormatter())
-ax.yaxis.set_minor_formatter(ScalarFormatter())
-plt.minorticks_off()
-plt.yticks([5, 10, 20, 50, 100, 300, 500, 700], [5, 10, 20, 50, 100, 300, 500, 700])
+ax.set_xscale('log')
+ax.xaxis.set_major_formatter(ScalarFormatter())
+ax.xaxis.set_minor_formatter(ScalarFormatter())
+plt.xticks([5, 10, 20, 50, 100, 300, 500, 700], [5, 10, 20, 50, 100, 300, 500, 700])
 plt.grid(True)
 plt.savefig(f'{os.environ["FILESDIR"]}/images/{args.dataset}_{args.pos_class}v{args.neg_class}_CDF_step1.png')
-
-# plt.figure(figsize=(12, 8))
-#
-# for name, data in techniques.items():
-#     if len(data) == 0:
-#         continue
-#     plt.hist(np.array(data).flatten(), bins=30, alpha=0.5, label=name)
-#
-# plt.xlabel('FID')
-# plt.ylabel('Frequency')
-# plt.title('Distribution of Performance Scores')
-# plt.legend()
-# plt.savefig(f'{os.environ["FILESDIR"]}/images/{args.dataset}_{args.pos_class}v{args.neg_class}_histogram_step1.png')

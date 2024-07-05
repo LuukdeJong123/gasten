@@ -100,24 +100,12 @@ all_scores = [
 # FID CDF
 plt.figure(figsize=(14, 7))
 plt.suptitle(f'CDF of HPO Techniques {args.dataset} {args.pos_class}v{args.neg_class}: Step 2', fontsize=16)
-plt.subplot(1, 2, 1)
 for i, method in enumerate(methods):
     sorted_fid = np.sort(np.array(all_scores[i][0]).flatten())
     cdf = np.arange(1, len(sorted_fid) + 1) / len(sorted_fid)
-    plt.plot(cdf * 100, sorted_fid, label=method, color=colors[i])
-plt.ylabel('Frechet Inception Distance (FID)')
-plt.xlabel('Percentage of Iterations (%)')
-plt.legend()
-plt.grid(True)
-
-# Confusion Distance CDF
-plt.subplot(1, 2, 2)
-for i, method in enumerate(methods):
-    sorted_cd = np.sort(np.array(all_scores[i][1]).flatten())
-    cdf = np.arange(1, len(sorted_cd) + 1) / len(sorted_cd)
-    plt.plot(cdf * 100, sorted_cd, label=method, color=colors[i])
-plt.ylabel('Average Confusion Distance (ACD)')
-plt.xlabel('Percentage of Iterations (%)')
+    plt.plot(sorted_fid, cdf * 100, label=method, color=colors[i])
+plt.xlabel('Frechet Inception Distance (FID)')
+plt.ylabel('Percentage of Iterations (%)')
 plt.legend()
 plt.grid(True)
 
