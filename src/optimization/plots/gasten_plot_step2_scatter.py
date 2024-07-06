@@ -127,7 +127,7 @@ for i, method in enumerate(methods):
     plt.subplot(1, 2, 2)
     hb = plt.hexbin(fid_scores, confusion_distances, gridsize=20, cmap='Blues')
     plt.xlabel('Frechet Inception Distance (FID)')
-    plt.ylabel('Average Confusion Distance (CD)')
+    plt.ylabel('Average Confusion Distance (ACD)')
     plt.title(f'Hexbin Plot: {method}')
     plt.grid(True)
     plt.colorbar(hb)
