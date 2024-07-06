@@ -83,8 +83,8 @@ def find_pareto_front(scores_fid, scores_cd):
     for i, point in enumerate(points):
         for j, other_point in enumerate(points):
             if i != j:
-                if (other_point[0] <= point[0] or other_point[1] < point[1]) or \
-                        (other_point[0] < point[0] or other_point[1] <= point[1]):
+                if (other_point[0] <= point[0] and other_point[1] < point[1]) or \
+                        (other_point[0] < point[0] and other_point[1] <= point[1]):
                     pareto_front[i] = 0
                     break
 
