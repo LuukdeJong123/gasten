@@ -75,6 +75,12 @@ hyperband_optimization_scores = load_json_scores(hyperband_directory)
 BOHB_directory = f"{os.environ['FILESDIR']}/out/BOHB_{args.dataset}-{args.pos_class}v{args.neg_class}/optimization"
 BOHB_optimization_scores = load_json_scores(BOHB_directory)
 
+print(min(random_search_scores))
+print(min(grid_search_scores))
+print(min(bayesian_optimization_scores))
+print(min(hyperband_optimization_scores))
+print(min(BOHB_optimization_scores))
+
 # Plot 1: Convergence Plot
 plt.figure(figsize=(10, 5))
 plt.plot(range(1, len(grid_search_scores) + 1), grid_search_scores, label='Random Grid search', color='blue')

@@ -61,20 +61,26 @@ def log_cluster(images, clustering_result, cluster_num, pos_class, neg_class, da
     cluster_indices = np.where(np.array(clustering_result) == cluster_num)[0]
     cluster = np.array([images[i].cpu().numpy() for i in cluster_indices])
 
-    torch.save(cluster,f"{os.environ['FILESDIR']}/clustering/cluster_iteration{i}_cluster_num{cluster_num}_{dataset}_{pos_class}v{neg_class}.pt")
+    if len(cluster) == 0:
+        print(f"Cluster {cluster_num} is empty, skipping logging.")
+        return
+
+    torch.save(cluster, f"{os.environ['FILESDIR']}/clustering/cluster_iteration{i}_cluster_num{cluster_num}_{dataset}_{pos_class}v{neg_class}.pt")
 
     # Determine the number of images to plot (up to 300)
     num_images_to_plot = min(300, len(cluster))
 
     # Create a combined image by arranging the images in a grid
     images_per_row = 15
-    images_per_column = num_images_to_plot // images_per_row
+    images_per_column = (num_images_to_plot + images_per_row - 1) // images_per_row  # Ensure the correct number of rows
+
     combined_image = np.zeros((28 * images_per_column, 28 * images_per_row))
 
     for i in range(images_per_column):
         for j in range(images_per_row):
-            if i * images_per_row + j < num_images_to_plot:
-                combined_image[i * 28: (i + 1) * 28, j * 28: (j + 1) * 28] = cluster[i * images_per_row + j]
+            index = i * images_per_row + j
+            if index < num_images_to_plot:
+                combined_image[i * 28: (i + 1) * 28, j * 28: (j + 1) * 28] = cluster[index]
 
     # Log the combined image using wandb
     wandb.log({"clusters": wandb.Image(combined_image, caption=f"cluster_{cluster_num}")})
