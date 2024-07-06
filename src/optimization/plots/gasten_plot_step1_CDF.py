@@ -55,10 +55,7 @@ def load_json_scores(directory):
                 with open(json_file_path) as json_file:
                     json_data = json.load(json_file)
                     last_score = json_data['eval']['fid'][len(json_data['eval']['fid']) - 1]
-                    if len(scores) > 0 and last_score > scores[-1]:
-                        scores.append(scores[-1])
-                    else:
-                        scores.append(last_score)
+                    scores.append(last_score)
     return scores
 
 

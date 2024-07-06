@@ -60,15 +60,10 @@ def load_json_scores(directory):
                 with open(json_file_path) as json_file:
                     json_data = json.load(json_file)
                     last_score_fid = json_data['eval']['fid'][len(json_data['eval']['fid']) - 1]
-                    if len(scores_fid) > 0 and last_score_fid > scores_fid[-1]:
-                        scores_fid.append(scores_fid[-1])
-                    else:
-                        scores_fid.append(last_score_fid)
+                    scores_fid.append(last_score_fid)
                     last_score_cd = json_data['eval']['conf_dist'][len(json_data['eval']['conf_dist']) - 1]
-                    if len(scores_cd) > 0 and last_score_cd > scores_cd[-1]:
-                        scores_cd.append(scores_cd[-1])
-                    else:
-                        scores_cd.append(last_score_cd)
+                    scores_cd.append(last_score_cd)
+
     return scores_fid, scores_cd
 
 directory_rs = f"{os.environ['FILESDIR']}/random_search_scores_{args.dataset}.{args.pos_class}v{args.neg_class}"
@@ -86,6 +81,29 @@ hyperband_optimization_scores, hyperband_optimization_cd = load_json_scores(hype
 BOHB_directory = f"{os.environ['FILESDIR']}/out/BOHB_{args.dataset}-{args.pos_class}v{args.neg_class}/optimization"
 BOHB_optimization_scores, BOHB_optimization_cd = load_json_scores(BOHB_directory)
 
+
+def find_pareto_front(scores_fid, scores_cd):
+    points = np.array(list(zip(scores_fid, scores_cd)))
+    pareto_front = np.ones(points.shape[0], dtype=bool)
+
+    for i, point in enumerate(points):
+        for j, other_point in enumerate(points):
+            if i != j:
+                if (other_point[0] <= point[0] or other_point[1] < point[1]) or \
+                        (other_point[0] < point[0] or other_point[1] <= point[1]):
+                    pareto_front[i] = 0
+                    break
+
+    return points[pareto_front]
+
+pareto_front = find_pareto_front(bayesian_optimization_scores, bayesian_optimization_cd)
+plt.scatter(bayesian_optimization_scores, bayesian_optimization_cd, label='All Points')
+plt.scatter(pareto_front[:, 0], pareto_front[:, 1], color='r', label='Pareto Front')
+plt.xlabel('FID')
+plt.ylabel('CD')
+plt.legend()
+plt.savefig(f'{os.environ["FILESDIR"]}/images/{args.dataset}_{args.pos_class}v{args.neg_class}_pareto_front_step2.png')
+print(pareto_front)
 methods = ['Random Grid Search', 'Random Search', 'Bayesian Optimization', 'Hyperband', 'BOHB']
 colors = ['blue', 'green', 'orange', 'red', 'purple']
 
