@@ -37,10 +37,7 @@ def load_pt_files(directory):
             filepath = os.path.join(directory, filename)
             data = torch.load(filepath)
             last_value = list(data.values())[len(data.keys()) - 1]
-            if len(scores) > 0 and last_value > scores[-1]:
-                scores.append(scores[-1])
-            else:
-                scores.append(last_value)
+            scores.append(last_value)
     return scores
 
 
